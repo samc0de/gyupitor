@@ -42,47 +42,49 @@ class Me():
         )
 
     @agent
-    def qa_agent(self) -> Agent:
+    def polyglot_developer(self) -> Agent:
         return Agent(
-            config=self.agents_config['qa_agent'], # type: ignore[index]
+            config=self.agents_config['polyglot_developer'], # type: ignore[index]
+            tools=[OpenHandsTool()],
             verbose=True
         )
 
     @agent
-    def security_auditor(self) -> Agent:
+    def system_ai_monitor(self) -> Agent:
         return Agent(
-            config=self.agents_config['security_auditor'], # type: ignore[index]
+            config=self.agents_config['system_ai_monitor'], # type: ignore[index]
+            verbose=True
+        )
+
+    @agent
+    def customer_chatbot(self) -> Agent:
+        return Agent(
+            config=self.agents_config['customer_chatbot'], # type: ignore[index]
             verbose=True
         )
 
     @task
-    def bq_optimization_task(self) -> Task:
+    def exploratory_analysis_task(self) -> Task:
         return Task(
-            config=self.tasks_config['bq_optimization_task'], # type: ignore[index]
+            config=self.tasks_config['exploratory_analysis_task'], # type: ignore[index]
         )
 
     @task
-    def architecture_design_task(self) -> Task:
+    def bq_creative_querying_task(self) -> Task:
         return Task(
-            config=self.tasks_config['architecture_design_task'], # type: ignore[index]
+            config=self.tasks_config['bq_creative_querying_task'], # type: ignore[index]
         )
 
     @task
-    def ui_ux_design_task(self) -> Task:
+    def user_interaction_task(self) -> Task:
         return Task(
-            config=self.tasks_config['ui_ux_design_task'], # type: ignore[index]
+            config=self.tasks_config['user_interaction_task'], # type: ignore[index]
         )
 
     @task
-    def qa_plan_task(self) -> Task:
+    def system_monitoring_task(self) -> Task:
         return Task(
-            config=self.tasks_config['qa_plan_task'], # type: ignore[index]
-        )
-
-    @task
-    def security_audit_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['security_audit_task'], # type: ignore[index]
+            config=self.tasks_config['system_monitoring_task'], # type: ignore[index]
         )
 
     @crew

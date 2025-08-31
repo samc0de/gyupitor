@@ -1,24 +1,19 @@
-bq_optimization_task:
-  description: "Analyze BigQuery resources, including INFORMATION_SCHEMA.JOBS_BY_PROJECT and table-defining queries, to identify and suggest cost optimization strategies for BigQuery jobs."
-  expected_output: "A detailed report outlining potential cost optimizations, including specific query rewrites, schema changes, and other actionable recommendations."
-  agent: bq_expert
-
-architecture_design_task:
-  description: "Design a comprehensive, scalable, and secure architecture for the BigQuery optimization application. This should include the tech stack, data models, deployment strategy, CI/CD pipeline, testing framework, monitoring and alerting mechanisms, and release management process."
-  expected_output: "A detailed architecture document that includes diagrams, technology choices, and a clear roadmap for development and deployment."
+exploratory_analysis_task:
+  description: "Continuously explore how to make this app more useful to FinOps, BQ engineers, and finance users. Propose improvements that I may not have thought of. Collaborate with the BQ Expert to run PoC queries and the UI/UX designer to visualize potential new features."
+  expected_output: "A running log of ideas, PoC results, and design sketches for new features and improvements. This should be a living document that is regularly updated."
   agent: software_architect
 
-ui_ux_design_task:
-  description: "Design a rich and intuitive user interface for the BigQuery optimization application, tailored to the needs of various user personas, including Finance, DevOps, Data Architects, and Ops teams. Create wireframes, mockups, and a style guide, and propose innovative visualizations for presenting optimization data."
-  expected_output: "A complete UI/UX design package, including high-fidelity mockups, a style guide, and a description of the user experience and visualizations."
-  agent: ui_ux_designer
+bq_creative_querying_task:
+  description: "Creatively explore the BigQuery environment. Use your expertise and a bit of randomness (e.g., higher temperature settings) to devise novel queries and analyses that could lead to unexpected insights for cost, performance, or new product features. Work with the Polyglot Developer to execute these queries."
+  expected_output: "A collection of innovative SQL queries, their results, and a brief analysis of why they might be interesting or valuable. The output should be a mix of code, data summaries, and creative ideas."
+  agent: bq_expert
 
-qa_plan_task:
-  description: "Develop a comprehensive QA plan for the BigQuery optimization application, covering functional, performance, and security testing. The plan should outline the testing strategy, test cases, and success criteria."
-  expected_output: "A detailed QA plan document that can be used to guide the testing process."
-  agent: qa_agent
+user_interaction_task:
+  description: "Engage with the user to brainstorm ideas, present options, and gather feedback. Act as the central point of communication between the user and the agent crew. Facilitate discussions about pros, cons, and alternative approaches."
+  expected_output: "A summary of user feedback, a list of prioritized ideas, and a clear set of requirements for the development team. This should be a collaborative document that reflects the ongoing conversation with the user."
+  agent: customer_chatbot
 
-security_audit_task:
-  description: "Conduct a thorough security audit of the BigQuery optimization application design and architecture. Identify potential vulnerabilities and recommend mitigation strategies."
-  expected_output: "A security audit report that details any identified vulnerabilities and provides actionable recommendations for improving the application's security posture."
-  agent: security_auditor
+system_monitoring_task:
+  description: "Monitor the performance and interaction of the agent crew. Analyze logs and metrics to identify bottlenecks, improve collaboration, and suggest optimizations for the AI system itself. Report on the crew's efficiency and effectiveness."
+  expected_output: "A regular report on the health of the AI system, including key performance indicators, collaboration graphs, and actionable recommendations for improvement."
+  agent: system_ai_monitor
