@@ -41,37 +41,48 @@ class Me():
             verbose=True
         )
 
-    @task
-    def bq_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['bq_task'], # type: ignore[index]
-        )
-
-    @task
-    def software_architect_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['software_architect_task'], # type: ignore[index]
-        )
-
-    @task
-    def ui_ux_designer_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['ui_ux_designer_task'], # type: ignore[index]
-            output_file='design.md'
+    @agent
+    def qa_agent(self) -> Agent:
+        return Agent(
+            config=self.agents_config['qa_agent'], # type: ignore[index]
+            verbose=True
         )
 
     @agent
-    def developer(self) -> Agent:
+    def security_auditor(self) -> Agent:
         return Agent(
-            config=self.agents_config['developer'], # type: ignore[index]
-            tools=[OpenHandsTool()],
+            config=self.agents_config['security_auditor'], # type: ignore[index]
             verbose=True
         )
 
     @task
-    def developer_task(self) -> Task:
+    def bq_optimization_task(self) -> Task:
         return Task(
-            config=self.tasks_config['developer_task'], # type: ignore[index]
+            config=self.tasks_config['bq_optimization_task'], # type: ignore[index]
+        )
+
+    @task
+    def architecture_design_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['architecture_design_task'], # type: ignore[index]
+        )
+
+    @task
+    def ui_ux_design_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['ui_ux_design_task'], # type: ignore[index]
+        )
+
+    @task
+    def qa_plan_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['qa_plan_task'], # type: ignore[index]
+        )
+
+    @task
+    def security_audit_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['security_audit_task'], # type: ignore[index]
         )
 
     @crew

@@ -1,19 +1,24 @@
-bq_task:
-  description: "Provide a detailed explanation of a BigQuery concept."
-  expected_output: "A clear and concise explanation of the BigQuery concept, with examples."
+bq_optimization_task:
+  description: "Analyze BigQuery resources, including INFORMATION_SCHEMA.JOBS_BY_PROJECT and table-defining queries, to identify and suggest cost optimization strategies for BigQuery jobs."
+  expected_output: "A detailed report outlining potential cost optimizations, including specific query rewrites, schema changes, and other actionable recommendations."
   agent: bq_expert
 
-software_architect_task:
-  description: "Create a high-level architecture for a new software product."
-  expected_output: "A diagram and a written description of the software architecture."
+architecture_design_task:
+  description: "Design a comprehensive, scalable, and secure architecture for the BigQuery optimization application. This should include the tech stack, data models, deployment strategy, CI/CD pipeline, testing framework, monitoring and alerting mechanisms, and release management process."
+  expected_output: "A detailed architecture document that includes diagrams, technology choices, and a clear roadmap for development and deployment."
   agent: software_architect
 
-ui_ux_designer_task:
-  description: "Design a user interface for a new mobile application."
-  expected_output: "A set of mockups and a style guide for the mobile application."
+ui_ux_design_task:
+  description: "Design a rich and intuitive user interface for the BigQuery optimization application, tailored to the needs of various user personas, including Finance, DevOps, Data Architects, and Ops teams. Create wireframes, mockups, and a style guide, and propose innovative visualizations for presenting optimization data."
+  expected_output: "A complete UI/UX design package, including high-fidelity mockups, a style guide, and a description of the user experience and visualizations."
   agent: ui_ux_designer
 
-developer_task:
-  description: "Delegate a task to OpenHands."
-  expected_output: "The result of the delegated task."
-  agent: developer
+qa_plan_task:
+  description: "Develop a comprehensive QA plan for the BigQuery optimization application, covering functional, performance, and security testing. The plan should outline the testing strategy, test cases, and success criteria."
+  expected_output: "A detailed QA plan document that can be used to guide the testing process."
+  agent: qa_agent
+
+security_audit_task:
+  description: "Conduct a thorough security audit of the BigQuery optimization application design and architecture. Identify potential vulnerabilities and recommend mitigation strategies."
+  expected_output: "A security audit report that details any identified vulnerabilities and provides actionable recommendations for improving the application's security posture."
+  agent: security_auditor
