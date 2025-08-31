@@ -1,0 +1,19 @@
+bq_task:
+  description: "Provide a detailed explanation of a BigQuery concept."
+  expected_output: "A clear and concise explanation of the BigQuery concept, with examples."
+  agent: bq_expert
+
+software_architect_task:
+  description: "Create a high-level architecture for a new software product."
+  expected_output: "A diagram and a written description of the software architecture."
+  agent: software_architect
+
+ui_ux_designer_task:
+  description: "Design a user interface for a new mobile application."
+  expected_output: "A set of mockups and a style guide for the mobile application."
+  agent: ui_ux_designer
+
+developer_task:
+  description: "Delegate a task to OpenHands."
+  expected_output: "The result of the delegated task."
+  agent: developer
