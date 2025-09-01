@@ -19,8 +19,20 @@ class Me():
     tasks: List[Task]
     llm: VertexAI
     def __init__(self) -> None:
-        self.pro_llm = VertexAI(model_name="gemini-2.5-pro")
-        self.flash_llm = VertexAI(model_name="gemini-2.5-flash")
+        self.pro_llm = VertexAI(
+            model_name="gemini-2.5-pro",
+            temperature=0.2,
+            top_p=0.9,
+            top_k=40,
+            max_output_tokens=4096
+        )
+        self.flash_llm = VertexAI(
+            model_name="gemini-2.5-flash",
+            temperature=0.2,
+            top_p=0.9,
+            top_k=40,
+            max_output_tokens=4096
+        )
         self.file_write_tool = WriteFileTool()
         self.bigquery_tool = BigQueryTool()
         self.shell_tool = ShellTool()
@@ -73,6 +85,8 @@ class Me():
             verbose=True
         )
 
+
+
     @agent
     def customer_chatbot(self) -> Agent:
         return Agent(
@@ -83,16 +97,25 @@ class Me():
         )
 
     @task
-    def initial_bq_analysis_task(self) -> Task:
+    def execute_bq_query_task(self) -> Task:
         return Task(
-            config=self.tasks_config['initial_bq_analysis_task'], # type: ignore[index]
+            config=self.tasks_config['execute_bq_query_task'],
+            agent=self.bq_expert()
+        )
+
+    @task
+    def analyze_bq_results_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['analyze_bq_results_task'],
+            agent=self.bq_expert(),
+            context=[self.execute_bq_query_task()]
         )
 
     @task
     def initial_architecture_task(self) -> Task:
         return Task(
-            config=self.tasks_config['initial_architecture_task'], # type: ignore[index]
-            context=[self.initial_bq_analysis_task()]
+            config=self.tasks_config['initial_architecture_task'],
+            context=[self.analyze_bq_results_task()]
         )
 
     @task

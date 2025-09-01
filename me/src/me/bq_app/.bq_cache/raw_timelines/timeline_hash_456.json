@@ -1,0 +1,7 @@
+{
+  "query_hash": "query_hash_123",
+  "timestamp": "2023-10-27T10:00:00Z",
+  "total_slot_ms": 15000,
+  "total_bytes_processed": 104857600,
+  "total_rows": 2
+}
