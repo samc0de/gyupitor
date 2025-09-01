@@ -64,27 +64,33 @@ class Me():
         )
 
     @task
-    def exploratory_analysis_task(self) -> Task:
+    def initial_bq_analysis_task(self) -> Task:
         return Task(
-            config=self.tasks_config['exploratory_analysis_task'], # type: ignore[index]
+            config=self.tasks_config['initial_bq_analysis_task'], # type: ignore[index]
         )
 
     @task
-    def bq_creative_querying_task(self) -> Task:
+    def initial_architecture_task(self) -> Task:
         return Task(
-            config=self.tasks_config['bq_creative_querying_task'], # type: ignore[index]
+            config=self.tasks_config['initial_architecture_task'], # type: ignore[index]
         )
 
     @task
-    def user_interaction_task(self) -> Task:
+    def initial_ui_design_task(self) -> Task:
         return Task(
-            config=self.tasks_config['user_interaction_task'], # type: ignore[index]
+            config=self.tasks_config['initial_ui_design_task'], # type: ignore[index]
         )
 
     @task
-    def system_monitoring_task(self) -> Task:
+    def development_kickoff_task(self) -> Task:
         return Task(
-            config=self.tasks_config['system_monitoring_task'], # type: ignore[index]
+            config=self.tasks_config['development_kickoff_task'], # type: ignore[index]
+        )
+
+    @task
+    def user_update_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['user_update_task'], # type: ignore[index]
         )
 
     @crew

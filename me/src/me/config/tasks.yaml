@@ -1,19 +1,24 @@
-exploratory_analysis_task:
-  description: "Continuously explore how to make this app more useful to FinOps, BQ engineers, and finance users. Propose improvements that I may not have thought of. Collaborate with the BQ Expert to run PoC queries and the UI/UX designer to visualize potential new features."
-  expected_output: "A running log of ideas, PoC results, and design sketches for new features and improvements. This should be a living document that is regularly updated."
-  agent: software_architect
-
-bq_creative_querying_task:
-  description: "Creatively explore the BigQuery environment. Use your expertise and a bit of randomness (e.g., higher temperature settings) to devise novel queries and analyses that could lead to unexpected insights for cost, performance, or new product features. Work with the Polyglot Developer to execute these queries."
-  expected_output: "A collection of innovative SQL queries, their results, and a brief analysis of why they might be interesting or valuable. The output should be a mix of code, data summaries, and creative ideas."
+initial_bq_analysis_task:
+  description: "Analyze BigQuery's `INFORMATION_SCHEMA.JOBS_BY_PROJECT`. Identify the most common, expensive, and inefficient queries. Based on this data, propose a concrete set of initial strategies for cost optimization."
+  expected_output: "A detailed report containing: 1. A summary of findings from the jobs schema. 2. A list of specific optimization recommendations (e.g., query rewrites, schema adjustments). 3. An estimate of potential cost savings for each recommendation."
   agent: bq_expert
 
-user_interaction_task:
-  description: "Engage with the user to brainstorm ideas, present options, and gather feedback. Act as the central point of communication between the user and the agent crew. Facilitate discussions about pros, cons, and alternative approaches."
-  expected_output: "A summary of user feedback, a list of prioritized ideas, and a clear set of requirements for the development team. This should be a collaborative document that reflects the ongoing conversation with the user."
-  agent: customer_chatbot
+initial_architecture_task:
+  description: "Based on the findings from the initial BigQuery analysis, design the core architecture for a cost-optimization application. The design must cover the tech stack for data processing, a simple API (e.g., FastAPI), and a basic data model for storing results and recommendations. Also, define the initial deployment strategy on a cloud platform."
+  expected_output: "An architecture document including: 1. A diagram of the system components. 2. A list of chosen technologies (e.g., Python, FastAPI, Docker). 3. A clear data model. 4. Step-by-step deployment plan."
+  agent: software_architect
 
-system_monitoring_task:
-  description: "Monitor the performance and interaction of the agent crew. Analyze logs and metrics to identify bottlenecks, improve collaboration, and suggest optimizations for the AI system itself. Report on the crew's efficiency and effectiveness."
-  expected_output: "A regular report on the health of the AI system, including key performance indicators, collaboration graphs, and actionable recommendations for improvement."
-  agent: system_ai_monitor
+initial_ui_design_task:
+  description: "Collaborate with the Software Architect to design a GOOD, clean, and effective user interface for the initial version of the BQ cost-optimization app. The UI should present the analysis results and optimization recommendations clearly to FinOps and BQ engineering users. The design should be practical for a first version."
+  expected_output: "A set of high-fidelity mockups for the main dashboard and recommendation views, along with a basic style guide. The design should be delivered in a format that the Polyglot Developer can easily implement."
+  agent: ui_ux_designer
+
+development_kickoff_task:
+  description: "Take the architecture document and UI mockups and begin implementing the initial version of the application. Start by setting up the project structure, building the FastAPI backend, and creating the initial UI components."
+  expected_output: "A link to a Git repository with the initial codebase, including a running backend service and the basic UI framework. The developer should provide a brief status update on what has been completed."
+  agent: polyglot_developer
+
+user_update_task:
+  description: "Synthesize the progress from the BQ analysis, architecture design, and UI design into a concise update for the user. Present the initial plan and designs, and ask for feedback before full-scale development begins."
+  expected_output: "A clear, well-structured summary of the project's direction, including key findings and design choices, presented as a message to the user."
+  agent: customer_chatbot
