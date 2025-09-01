@@ -7,6 +7,7 @@ from langchain_google_vertexai import VertexAI
 from me.tools.file_tools import WriteFileTool
 from me.tools.bigquery_tool import BigQueryTool
 # If you want to run a snippet of code before or after the crew starts,
+from me.tools.shell_tool import ShellTool
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
@@ -22,6 +23,7 @@ class Me():
         self.flash_llm = VertexAI(model_name="gemini-2.5-flash")
         self.file_write_tool = WriteFileTool()
         self.bigquery_tool = BigQueryTool()
+        self.shell_tool = ShellTool()
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
     # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
     
@@ -40,7 +42,7 @@ class Me():
     def software_architect(self) -> Agent:
         return Agent(
             config=self.agents_config['software_architect'], # type: ignore[index]
-            tools=[self.file_write_tool],
+            tools=[self.file_write_tool, self.shell_tool],
             llm=self.pro_llm,
             verbose=True
         )
@@ -57,7 +59,7 @@ class Me():
     def polyglot_developer(self) -> Agent:
         return Agent(
             config=self.agents_config['polyglot_developer'], # type: ignore[index]
-            tools=[OpenHandsTool(), self.file_write_tool],
+            tools=[OpenHandsTool(), self.file_write_tool, self.shell_tool],
             llm=self.flash_llm,
             verbose=True
         )
@@ -90,24 +92,35 @@ class Me():
     def initial_architecture_task(self) -> Task:
         return Task(
             config=self.tasks_config['initial_architecture_task'], # type: ignore[index]
+            context=[self.initial_bq_analysis_task()]
         )
 
     @task
     def initial_ui_design_task(self) -> Task:
         return Task(
             config=self.tasks_config['initial_ui_design_task'], # type: ignore[index]
+            context=[self.initial_architecture_task()]
         )
 
     @task
     def development_kickoff_task(self) -> Task:
         return Task(
             config=self.tasks_config['development_kickoff_task'], # type: ignore[index]
+            context=[self.initial_architecture_task(), self.initial_ui_design_task()]
+        )
+
+    @task
+    def deployment_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['deployment_task'], # type: ignore[index]
+            context=[self.development_kickoff_task()]
         )
 
     @task
     def user_update_task(self) -> Task:
         return Task(
             config=self.tasks_config['user_update_task'], # type: ignore[index]
+            context=[self.deployment_task()]
         )
 
     @crew

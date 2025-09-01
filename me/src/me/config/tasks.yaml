@@ -1,24 +1,29 @@
 initial_bq_analysis_task:
-  description: "Analyze BigQuery's `INFORMATION_SCHEMA.JOBS_BY_PROJECT`. Identify the most common, expensive, and inefficient queries. Based on this data, propose a concrete set of initial strategies for cost optimization."
+  description: "Get a list of all projects in my org, noting if they have BQ enabled (reservations or on demand), write it to a csv file locally. Go through all those w/ BQ usage, and Analyze their BigQuery's `INFORMATION_SCHEMA.JOBS_BY_PROJECT` for 30 days. IMPORTANT: Use `SELECT *` for all queries to avoid column name errors. Identify the most common, expensive, and inefficient queries. Based on this data, propose a concrete set of initial strategies for cost optimization. Look from all perspectives: SQL, BQ, GCP-cloud etc. Also look for performance improvements. Write the BQ results to a dir locally"
   expected_output: "A detailed report containing: 1. A summary of findings from the jobs schema. 2. A list of specific optimization recommendations (e.g., query rewrites, schema adjustments). 3. An estimate of potential cost savings for each recommendation."
   agent: bq_expert
 
 initial_architecture_task:
-  description: "Based on the findings from the initial BigQuery analysis, design the core architecture for a cost-optimization application. The design must cover the tech stack for data processing, a simple API (e.g., FastAPI), and a basic data model for storing results and recommendations. Also, define the initial deployment strategy on a cloud platform."
+  description: "Based on the findings from the initial BigQuery analysis, design the core architecture for a cost-optimization application. The design must cover the tech stack for data processing, a simple API (e.g., FastAPI), and a basic data model for storing results and recommendations.  Make this a periodic (if not event driven) job. Also, define the initial deployment strategy on a cloud platform."
   expected_output: "An architecture document including: 1. A diagram of the system components. 2. A list of chosen technologies (e.g., Python, FastAPI, Docker). 3. A clear data model. 4. Step-by-step deployment plan."
   agent: software_architect
 
 initial_ui_design_task:
-  description: "Collaborate with the Software Architect to design a GOOD, clean, and effective user interface for the initial version of the BQ cost-optimization app. The UI should present the analysis results and optimization recommendations clearly to FinOps and BQ engineering users. The design should be practical for a first version."
+  description: "Collaborate with the Software Architect to design a GOOD, clean, and effective user interface for the initial version of the BQ cost-optimization app. The UI should present the analysis results and optimization recommendations clearly to FinOps and BQ engineering users. The design should be practical for a first version yet informative and rich enough. Don't hesitate using react."
   expected_output: "A set of high-fidelity mockups for the main dashboard and recommendation views, along with a basic style guide. The design should be delivered in a format that the Polyglot Developer can easily implement."
   agent: ui_ux_designer
 
 development_kickoff_task:
-  description: "Take the architecture document and UI mockups and begin implementing the initial version of the application. Start by setting up the project structure, building the FastAPI backend, and creating the initial UI components."
-  expected_output: "A link to a Git repository with the initial codebase, including a running backend service and the basic UI framework. The developer should provide a brief status update on what has been completed."
+  description: "Using the architecture document and the UI/UX design plan as a guide, implement the initial version of the BQ cost-optimization application. Your task is to produce a functional, runnable codebase for both the frontend and backend. The frontend should be interactive and capable of displaying data, consistent with the UI/UX agent's vision. Focus on creating a solid foundation that can be built upon."
+  expected_output: "A complete, runnable project structure. This must include all necessary source code for a backend service and a modern, functional frontend UI. The developer must provide a brief status update on what was built."
   agent: polyglot_developer
 
+deployment_task:
+  description: "Take the completed codebase from the developer, ensure the backend is configured to serve the frontend, and containerize the entire application. The final result should be a single, runnable Docker container."
+  expected_output: "A fully functional Docker container hosted on a local IP that has the full app running. The final output must be the shell command needed to run this container."
+  agent: software_architect
+
 user_update_task:
-  description: "Synthesize the progress from the BQ analysis, architecture design, and UI design into a concise update for the user. Present the initial plan and designs, and ask for feedback before full-scale development begins."
+  description: "Synthesize the progress from the BQ analysis, architecture design, and UI design into a concise update for the user. Present the initial plan and designs, and ask for feedback before full-scale development begins. Incorporate the following user feedback: {user_feedback}"
   expected_output: "A clear, well-structured summary of the project's direction, including key findings and design choices, presented as a message to the user."
   agent: customer_chatbot

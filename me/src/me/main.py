@@ -20,17 +20,63 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
 def run():
     """
-    Run the crew.
+    Run the crew's main tasks once, then enter an interactive mode for feedback.
     """
-    inputs = {
-        'topic': 'AI LLMs',
-        'current_year': str(datetime.now().year)
-    }
-    
+    me_crew = Me()
+    crew = me_crew.crew()
+
+    print("🚀 Kicking off the main crew to perform initial analysis and setup...")
     try:
-        Me().crew().kickoff(inputs=inputs)
+        # Run the main sequence of tasks
+        main_result = crew.kickoff()
+        print("\n✅ Main crew execution finished.")
+        print("---------------------------------")
+        print("Main execution result:", main_result)
+        print("---------------------------------")
+
     except Exception as e:
-        raise Exception(f"An error occurred while running the crew: {e}")
+        print(f"An error occurred during the main run: {e}")
+        return  # Exit if the main run fails
+
+    print("\nEntering interactive mode. You can now provide feedback or ask questions.")
+    
+    # Identify the customer_chatbot agent for the interactive loop
+    customer_chatbot = next((agent for agent in crew.agents if agent.role == 'Customer Chatbot'), None)
+    
+    if not customer_chatbot:
+        print("Error: Could not find the Customer Chatbot agent.")
+        return
+
+    while True:
+        try:
+            user_input = input("You: ")
+            if user_input.lower() in ['exit', 'quit']:
+                print("Exiting the interactive session.")
+                break
+
+            # Create a new, specific task for the chatbot for each interaction
+            interactive_task = Task(
+                description=f"Address the user's latest message: '{user_input}'. Use your memory of the project to provide a relevant response. Do not re-run the entire project.",
+                agent=customer_chatbot,
+                expected_output="A helpful and context-aware response to the user's message."
+            )
+            
+            # Execute only this single task using a temporary crew
+            chat_crew = Crew(
+                agents=[customer_chatbot],
+                tasks=[interactive_task],
+                verbose=False,
+                memory=True
+            )
+            result = chat_crew.kickoff()
+            
+            print("\nChatbot:")
+            print(result)
+            print("\n-------------------\n")
+
+        except Exception as e:
+            print(f"An error occurred during the interactive session: {e}")
+            break
 
 
 def train():
