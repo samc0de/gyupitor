@@ -27,24 +27,27 @@ def run():
 
     print("🚀 Kicking off the main crew to perform initial analysis and setup...")
     try:
-        # Run the main sequence of tasks
+        # Run the main sequence of tasks.
+        # This is a long-running process. If it hangs, the script will not proceed.
         main_result = crew.kickoff()
-        print("\n✅ Main crew execution finished.")
+
+        print("\n✅ Main crew execution finished successfully.")
         print("---------------------------------")
-        print("Main execution result:", main_result)
+        print("Final Result:", main_result)
         print("---------------------------------")
 
     except Exception as e:
-        print(f"An error occurred during the main run: {e}")
-        return  # Exit if the main run fails
+        print(f"\n❌ An error occurred during the main crew execution: {e}")
+        print("Exiting.")
+        return
 
-    print("\nEntering interactive mode. You can now provide feedback or ask questions.")
+    print("\n✅ Entering interactive mode. The crew has finished its main tasks.")
+    print("You can now ask questions or provide feedback to the Customer Chatbot.")
     
-    # Identify the customer_chatbot agent for the interactive loop
-    customer_chatbot = next((agent for agent in crew.agents if agent.role == 'Customer Chatbot'), None)
-    
-    if not customer_chatbot:
-        print("Error: Could not find the Customer Chatbot agent.")
+    # Get the original chatbot agent from the crew, preserving its memory
+    customer_chatbot = crew.agents[-1] 
+    if "Chatbot" not in customer_chatbot.role:
+        print("Error: Could not find the Customer Chatbot agent. Exiting.")
         return
 
     while True:
@@ -54,20 +57,21 @@ def run():
                 print("Exiting the interactive session.")
                 break
 
-            # Create a new, specific task for the chatbot for each interaction
-            interactive_task = Task(
-                description=f"Address the user's latest message: '{user_input}'. Use your memory of the project to provide a relevant response. Do not re-run the entire project.",
-                agent=customer_chatbot,
-                expected_output="A helpful and context-aware response to the user's message."
-            )
-            
-            # Execute only this single task using a temporary crew
+            # Create a new, single-agent crew for the chat interaction
+            # This re-uses the *exact same agent object*, preserving its memory
             chat_crew = Crew(
                 agents=[customer_chatbot],
-                tasks=[interactive_task],
+                tasks=[
+                    Task(
+                        description=f"Address the user's question: '{user_input}'. Use your existing knowledge of the project.",
+                        agent=customer_chatbot,
+                        expected_output="A helpful, context-aware response."
+                    )
+                ],
                 verbose=False,
-                memory=True
+                memory=True # Memory is enabled for the agent within this single-task crew
             )
+            
             result = chat_crew.kickoff()
             
             print("\nChatbot:")

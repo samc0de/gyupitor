@@ -4,7 +4,7 @@ initial_bq_analysis_task:
   agent: bq_expert
 
 initial_architecture_task:
-  description: "Based on the findings from the initial BigQuery analysis, design the core architecture for a cost-optimization application. The design must cover the tech stack for data processing, a simple API (e.g., FastAPI), and a basic data model for storing results and recommendations.  Make this a periodic (if not event driven) job. Also, define the initial deployment strategy on a cloud platform."
+  description: "Based on the findings from the initial BigQuery analysis, design the core architecture for a cost-optimization application(although cloud infra is better for procuction, let's have everything local for now, a local docker set. Instead of those local csv, all the data can be kept in a local db -u decide melilisearch/mongo/es/pg whatever lightwt, we may need strong integration & search abilities, but also think about aggregations). The design must cover the tech stack for data processing, a simple API (e.g., FastAPI), and a basic data model for storing results and recommendations.  Make this a periodic (if not event driven) job. Also, define the initial deployment strategy on a cloud platform."
   expected_output: "An architecture document including: 1. A diagram of the system components. 2. A list of chosen technologies (e.g., Python, FastAPI, Docker). 3. A clear data model. 4. Step-by-step deployment plan."
   agent: software_architect
 
