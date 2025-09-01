@@ -1,0 +1,4 @@
+crewai
+langchain-google-vertexai
+crewai[tools]
+google-cloud-bigquery

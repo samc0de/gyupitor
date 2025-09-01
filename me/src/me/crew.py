@@ -2,7 +2,10 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
-from cag.me.tools.openhands_tool import OpenHandsTool
+from me.tools.openhands_tool import OpenHandsTool
+from langchain_google_vertexai import VertexAI
+from me.tools.file_tools import WriteFileTool
+from me.tools.bigquery_tool import BigQueryTool
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -13,8 +16,12 @@ class Me():
 
     agents: List[BaseAgent]
     tasks: List[Task]
-
-    # Learn more about YAML configuration files here:
+    llm: VertexAI
+    def __init__(self) -> None:
+        self.pro_llm = VertexAI(model_name="gemini-2.5-pro")
+        self.flash_llm = VertexAI(model_name="gemini-2.5-flash")
+        self.file_write_tool = WriteFileTool()
+        self.bigquery_tool = BigQueryTool()
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
     # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
     
@@ -24,6 +31,8 @@ class Me():
     def bq_expert(self) -> Agent:
         return Agent(
             config=self.agents_config['bq_expert'], # type: ignore[index]
+            tools=[self.bigquery_tool],
+            llm=self.pro_llm,
             verbose=True
         )
 
@@ -31,6 +40,8 @@ class Me():
     def software_architect(self) -> Agent:
         return Agent(
             config=self.agents_config['software_architect'], # type: ignore[index]
+            tools=[self.file_write_tool],
+            llm=self.pro_llm,
             verbose=True
         )
 
@@ -38,6 +49,7 @@ class Me():
     def ui_ux_designer(self) -> Agent:
         return Agent(
             config=self.agents_config['ui_ux_designer'], # type: ignore[index]
+            llm=self.pro_llm,
             verbose=True
         )
 
@@ -45,7 +57,8 @@ class Me():
     def polyglot_developer(self) -> Agent:
         return Agent(
             config=self.agents_config['polyglot_developer'], # type: ignore[index]
-            tools=[OpenHandsTool()],
+            tools=[OpenHandsTool(), self.file_write_tool],
+            llm=self.flash_llm,
             verbose=True
         )
 
@@ -53,6 +66,8 @@ class Me():
     def system_ai_monitor(self) -> Agent:
         return Agent(
             config=self.agents_config['system_ai_monitor'], # type: ignore[index]
+            tools=[self.file_write_tool],
+            llm=self.flash_llm,
             verbose=True
         )
 
@@ -60,6 +75,8 @@ class Me():
     def customer_chatbot(self) -> Agent:
         return Agent(
             config=self.agents_config['customer_chatbot'], # type: ignore[index]
+            tools=[self.file_write_tool],
+            llm=self.flash_llm,
             verbose=True
         )
 
@@ -106,3 +123,18 @@ class Me():
             verbose=True,
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
+
+if __name__ == "__main__":
+    import sys
+    print("Crew script started...")
+    try:
+        me_crew = Me()
+        result = me_crew.crew().kickoff()
+        print("Crew kickoff result:")
+        print(result)
+    except Exception as e:
+        print(f"An error occurred: {e}", file=sys.stderr)
+        # Also print traceback for more details
+        import traceback
+        traceback.print_exc()
+
