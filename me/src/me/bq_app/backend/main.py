@@ -1,10 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from typing import List
 from datetime import datetime, timedelta
 import uuid
+import os
 
-from .models import Recommendation
+from models import Recommendation
 
 app = FastAPI(
     title="BigQuery Cost Optimization API",
@@ -74,3 +76,7 @@ async def get_recommendation(recommendation_id: uuid.UUID):
         if rec.id == recommendation_id:
             return rec
     raise HTTPException(status_code=404, detail="Recommendation not found")
+
+STATIC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "static"))
+app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+
