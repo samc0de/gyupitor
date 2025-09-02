@@ -27,10 +27,11 @@ def ingest_data(db: Session, bq_cache_path: str = ".bq_cache"):
 
     # Ingest query_jobs and raw_queries
     for filename in os.listdir(query_results_path):
-        if filename.endswith(".json"):
+        if filename.endswith(".jsonl"):
             file_path = os.path.join(query_results_path, filename)
             with open(file_path, 'r') as f:
-                data = json.load(f)
+                for line in f:
+                    job_data = json.loads(line)
 
             for job_data in data:
                 # Ingest RawQuery first
@@ -78,11 +79,13 @@ def ingest_data(db: Session, bq_cache_path: str = ".bq_cache"):
 
     print("Data ingestion complete.")
 
+
 if __name__ == "__main__":
-    # This part allows running ingest.py directly
     db_gen = get_db()
-    db = next(db_gen) # Get the database session
+    db = next(db_gen)
     try:
-        ingest_data(db)
+        # The cache path is fixed inside the container environment
+        ingest_data(db, bq_cache_path="/app/.bq_cache")
     finally:
-        db_gen.close() # Close the session
+        db_gen.close()
+

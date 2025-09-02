@@ -9,9 +9,7 @@ export DATABASE_URL="sqlite:////app/db_data/bq_analyzer.db"
 # Run the data ingestion script
 # We need to navigate to the backend directory to ensure correct module resolution
 echo "--- Running data ingestion ---"
-cd /app/backend
-python -c 'from ingest import ingest_data, get_db; db_gen = get_db(); db = next(db_gen); ingest_data(db, bq_cache_path=BQ_CACHE_DIR); db_gen.close()' 
-cd /app
+python -m backend.ingest
 echo "--- Data ingestion complete ---"
 
 # Start the FastAPI server

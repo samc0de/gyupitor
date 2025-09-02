@@ -5,7 +5,7 @@ set -e
 
 # --- Configuration ---
 IMAGE_NAME="bq-cost-app"
-CONTAINER_NAME="bq-cost-app-container"
+CONTAINER_NAME="bq-optimizer-container"
 HOST_PORT="8000"
 
 # Get the absolute path to the parent directory of this script.
@@ -13,9 +13,9 @@ HOST_PORT="8000"
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
-# Define absolute paths for the volumes.
-CACHE_DIR="$SCRIPT_DIR/.bq_cache"
-DB_DIR="$SCRIPT_DIR/db_data"
+# Define absolute paths for the volumes based on the project root.
+CACHE_DIR="$PROJECT_ROOT/../../.bq_cache"
+DB_DIR="$PROJECT_ROOT/db_data"
 DB_FILE="$DB_DIR/bq_analyzer.db"
 
 # --- Pre-flight checks ---

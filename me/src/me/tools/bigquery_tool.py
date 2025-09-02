@@ -1,9 +1,45 @@
 import os
+import io
+import csv
 import json
 import hashlib
 from datetime import datetime
 from crewai.tools import BaseTool
 from google.cloud import bigquery
+
+
+def timeline_to_csv(timeline: list[dict], top_n: int = 5) -> str:
+    """Convert BigQuery job timeline JSON to a compact CSV for cost optimization."""
+
+    # Pick only cost-impacting fields
+    simplified = [
+        {
+            "id": stage.get("id"),
+            "name": stage.get("name"),
+            "slotMs": stage.get("slotMs", 0),
+            "computeMs": stage.get("computeMs", 0),
+            "readMb": stage.get("readMb", 0),
+            "writeMb": stage.get("writeMb", 0),
+        }
+        for stage in timeline
+    ]
+
+    # Sort by slotMs descending
+    simplified.sort(key=lambda s: s.get("slotMs", 0), reverse=True)
+
+    # Either top_n or stages above cutoff (e.g., 10%)
+    total_slots = sum(s["slotMs"] for s in simplified)
+    cutoff = 0.1 * total_slots if total_slots else 0
+    filtered = [s for s in simplified if s["slotMs"] >= cutoff][:top_n]
+
+    # Convert to CSV string
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=["id", "name", "slotMs", "computeMs", "readMb", "writeMb"])
+    writer.writeheader()
+    writer.writerows(filtered)
+
+    return output.getvalue()
+
 
 class BigQueryTool(BaseTool):
     name: str = "BigQuery Tool"
@@ -31,7 +67,7 @@ class BigQueryTool(BaseTool):
 
         for row in rows:
             processed_row = dict(row)
-            job_id = processed_row.get('job_id', f"unknown_job_{hashlib.sha256(json.dumps(processed_row).encode()).hexdigest()}")
+            job_id = processed_row.get('job_id', f"unknown_job_{hashlib.sha256(json.dumps(processed_row, default=str).encode()).hexdigest()}")
 
             # --- Deduplicate 'query_text' field ---
             if 'query_text' in processed_row and processed_row['query_text']:
@@ -50,27 +86,14 @@ class BigQueryTool(BaseTool):
             # --- Create meaningul, stagewise summary for 'timeline' ---
             if 'timeline' in processed_row and processed_row['timeline']:
                 try:
-                    timeline_data = json.loads(processed_row['timeline'])
-                    stage_summary = {}
-                    # Assuming stages are sequential for duration calculation
-                    for i in range(len(timeline_data) - 1):
-                        stage = timeline_data[i]
-                        next_stage = timeline_data[i+1]
-                        stage_name = stage.get('stage_name', 'unknown_stage')
-                        duration_ms = next_stage['event_timestamp_ms'] - stage['event_timestamp_ms']
-                        
-                        if stage_name not in stage_summary:
-                            stage_summary[stage_name] = {'total_duration_ms': 0, 'count': 0}
-                        
-                        stage_summary[stage_name]['total_duration_ms'] += duration_ms
-                        stage_summary[stage_name]['count'] += 1
-
-                    processed_row['timeline_summary'] = stage_summary
+                    # The BQ client library might auto-parse the JSON, so handle both string and list cases
+                    timeline_data = processed_row['timeline'] if isinstance(processed_row['timeline'], list) else json.loads(processed_row['timeline'])
+                    processed_row['timeline_metrics'] = timeline_to_csv(timeline_data)
                     
                     timeline_filename = os.path.join(self.raw_timelines_dir, f"{job_id}_timeline.json")
-                    with open(timeline_filename, 'w') as f:
-                        json.dump(timeline_data, f, indent=4)
-                    processed_row['timeline_details_file'] = timeline_filename
+                    # with open(timeline_filename, 'w') as f:
+                    #     json.dump(timeline_data, f, indent=4)
+                    # processed_row['timeline_details_file'] = timeline_filename
 
                 except (json.JSONDecodeError, IndexError, KeyError, TypeError) as e:
                     print(f"WARNING: Could not process timeline for job {job_id}. Error: {e}")
@@ -108,4 +131,5 @@ class BigQueryTool(BaseTool):
             
             return f"Successfully executed query and cached processed results to {cache_file}. The BQ expert should now analyze this file. Other agents should wait for the BQ expert's analysis."
         except Exception as e:
-            return f"Error executing BigQuery query: {e}"
+            print(f"FATAL: Error executing BigQuery query: {e}")
+            raise
