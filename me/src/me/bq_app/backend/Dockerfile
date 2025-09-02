@@ -1,10 +1,19 @@
-FROM python:3.9-slim-buster
+FROM python:3.11-slim-bookworm
+
+ENV PATH="/root/.local/bin:${PATH}"
+ENV PYTHONPATH="/app"
 
 WORKDIR /app
 
+# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install redis celery
 
-COPY . .
+# Copy the application code
+COPY . /app
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Make start script executable and run it
+COPY backend/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+CMD ["/app/start.sh"]
