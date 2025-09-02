@@ -1,21 +1,19 @@
-FROM python:3.9-slim
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim-buster
 
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy requirements.txt and install dependencies
+# Install any needed packages specified in requirements.txt
+# Copy only requirements.txt first to leverage Docker cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the main application file
+# Copy the rest of the application code
 COPY main.py .
 
-# Copy the recommendations data from analysis directory relative to the build context
-# The implementation directory is the build context, so ../analysis is correct path
-COPY ../analysis /analysis
-
-# Expose the port the app runs on
+# Expose port 8000 for the FastAPI application
 EXPOSE 8000
 
-# Command to run the application
-# Use "main:app" because main.py is copied to /app and the app instance is named "app"
+# Command to run the Uvicorn server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

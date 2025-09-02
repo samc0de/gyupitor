@@ -19,9 +19,12 @@ class Me():
 
     def __init__(self) -> None:
         # Define LLMs
-        self.pro_llm = VertexAI(model_name="gemini-2.5-pro")
-        self.strict_llm = VertexAI(model_name="gemini-2.5-pro", temperature=0.0)
-        self.flash_llm = VertexAI(model_name="gemini-2.5-flash")
+        self.pro_llm = VertexAI(model_name="gemini-1.5-pro-preview-0409")
+        self.strict_llm = VertexAI(model_name="gemini-1.5-pro-preview-0409", temperature=0.0)
+        self.flash_llm = VertexAI(model_name="gemini-1.5-flash-preview-0409")
+        
+        # Expose the software_architect agent for interactive mode
+        self.software_architect_agent = self.software_architect()
 
     @agent
     def bq_expert(self) -> Agent:
@@ -45,7 +48,7 @@ class Me():
     def ui_ux_designer(self) -> Agent:
         return Agent(
             config=self.agents_config['ui_ux_designer'],
-            tools=[FileWriterTool(), FileReaderTool()],
+            tools=[FileWriterTool(), FileReaderTool(), ShellTool()],
             llm=self.pro_llm,
             verbose=True
         )
@@ -78,10 +81,18 @@ class Me():
         )
 
     @task
+    def provide_instructions_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['provide_instructions_task'],
+            agent=self.customer_chatbot()
+        )
+
+    @task
     def analyze_and_recommend_task(self) -> Task:
         return Task(
             config=self.tasks_config['analyze_and_recommend_task'],
-            agent=self.bq_expert()
+            agent=self.bq_expert(),
+            context=[self.provide_instructions_task()]
         )
 
     @task

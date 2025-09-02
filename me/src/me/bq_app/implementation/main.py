@@ -1,41 +1,38 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import json
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import os
 
 app = FastAPI()
 
-# Configure CORS
-origins = [
-    "http://localhost",
-    "http://localhost:80",
-    "http://localhost:3000", # For potential React dev server
-    "http://127.0.0.1:3000",
-]
-
+# Allow CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Allows all origins for development purposes
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+RECOMMENDATIONS_FILE = "/app/analysis/recommendations.json" # Path inside the Docker container
+
 @app.get("/api/recommendations")
-def get_recommendations():
-    # Construct the path to recommendations.json relative to the current script
-    # The analysis directory is a sibling of the implementation directory
-    script_dir = os.path.dirname(__file__)
-    json_path = os.path.join(script_dir, "..", "analysis", "recommendations.json")
-    
-    # Ensure the path is absolute and normalized
-    json_path = os.path.abspath(json_path)
+async def get_recommendations():
+    if not os.path.exists(RECOMMENDATIONS_FILE):
+        raise HTTPException(status_code=404, detail=f"Recommendations file not found at {RECOMMENDATIONS_FILE}")
+    try:
+        with open(RECOMMENDATIONS_FILE, "r") as f:
+            recommendations = json.load(f)
+        return recommendations
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Error decoding recommendations JSON")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
-    if not os.path.exists(json_path):
-        # Log an error or return a specific error response if the file is not found
-        print(f"Error: recommendations.json not found at {json_path}")
-        return {"error": "Recommendations file not found"}
+@app.get("/")
+async def root():
+    return {"message": "BigQuery Recommendations Backend is running!"}
 
-    with open(json_path) as f:
-        data = json.load(f)
-    return data
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -5,16 +5,10 @@ services:
     build: ./implementation/backend
     ports:
       - "8000:8000"
-    volumes:
-      - ./implementation/backend:/app
-    container_name: bq-app-backend
 
   frontend:
-    build:
-      context: ./implementation
-      dockerfile: frontend.Dockerfile
+    build: ./implementation/frontend
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - backend
-    container_name: bq-app-frontend

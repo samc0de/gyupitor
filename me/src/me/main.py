@@ -45,17 +45,8 @@ def run():
     print("\n✅ Entering interactive mode. The crew has finished its main tasks.")
     print("You can now ask questions or provide feedback to the Software Architect.")
     
-    # Find the Software Architect agent to interact with
-    software_architect_agent = None
-    for agent in crew.agents:
-        if agent.role == 'Cloud Software and DevOps Architect':
-            software_architect_agent = agent
-            break
+    software_architect_agent = me_crew.software_architect_agent
     
-    if not software_architect_agent:
-        print("Error: Could not find the Software Architect agent. Exiting.")
-        return
-
     while True:
         try:
             user_input = input("You: ")
@@ -64,6 +55,7 @@ def run():
                 break
 
             # Create a new, single-agent crew for the chat interaction
+            # The agent already has the LLM assigned, so we can access it directly.
             chat_crew = Crew(
                 agents=[software_architect_agent],
                 tasks=[
@@ -75,7 +67,7 @@ def run():
                 ],
                 verbose=False,
                 memory=True,
-                llm=me_crew.pro_llm
+                llm=software_architect_agent.llm  # Access the LLM directly from the agent
             )
             
             result = chat_crew.kickoff()

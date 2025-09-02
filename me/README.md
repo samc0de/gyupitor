@@ -1,54 +1,57 @@
-# Me Crew
+# CrewAI Full-Stack Application Generator
 
-Welcome to the Me Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+This project uses a CrewAI-powered team of agents to automate the design, implementation, and containerization of a full-stack web application based on an initial data analysis report from Google BigQuery.
 
-## Installation
+## Prerequisites
 
-Ensure you have Python >=3.10 <3.14 installed on your system. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+1.  **Python 3.10+**: Ensure you have a modern version of Python installed.
+2.  **Poetry**: This project uses Poetry for dependency management. If you don't have it, you can install it following the official documentation.
+3.  **Google Cloud SDK (`gcloud`)**: You must have the `gcloud` CLI installed and authenticated to a Google Cloud project with the BigQuery API enabled.
+    - [Install gcloud](https://cloud.google.com/sdk/docs/install)
+    - Run `gcloud auth application-default login` to authenticate.
 
-First, if you haven't already, install uv:
+## Setup Instructions
 
+1.  **Clone the Repository**:
+    ```bash
+    git clone <repository_url>
+    cd cag/me
+    ```
+
+2.  **Install Dependencies**:
+    Use Poetry to create a virtual environment and install all required packages.
+    ```bash
+    poetry install
+    ```
+
+3.  **Activate the Virtual Environment**:
+    All subsequent commands should be run from within the virtual environment.
+    ```bash
+    poetry shell
+    ```
+
+## How to Run the Application
+
+The main entrypoint for the application is `src/me/main.py`. This script will kick off the entire 6-step agentic workflow. **Do not use `crewai run`**, as it will not work with this project's custom setup.
+
+**To run the full process:**
+
+Execute the `main.py` script from the project root (`cag/me`):
 ```bash
-pip install uv
+python src/me/main.py
 ```
 
-Next, navigate to your project directory and install the dependencies:
+### The Workflow Steps:
 
-(Optional) Lock the dependencies and install them by using the CLI command:
-```bash
-crewai install
-```
-### Customizing
+1.  **Analysis (`bq_expert`)**: The crew starts by querying BigQuery to generate a data analysis report. The output is saved to a new directory under `job_runs/`.
+2.  **Full-Stack Design (`software_architect`)**: The architect designs the application's backend, frontend, and containerization strategy based on the report.
+3.  **Backend Implementation (`polyglot_developer`)**: The developer writes the FastAPI server and its `Dockerfile`.
+4.  **Frontend Implementation (`ui_ux_designer`)**: The designer creates the API-driven frontend and its `Dockerfile`.
+5.  **Containerization (`software_architect`)**: The architect creates a `docker-compose.yml` file to run the application.
+6.  **Review (`customer_chatbot`)**: The final application is reviewed for correctness and alignment with the initial goals.
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+### Interactive Mode
 
-- Modify `src/me/config/agents.yaml` to define your agents
-- Modify `src/me/config/tasks.yaml` to define your tasks
-- Modify `src/me/crew.py` to add your own logic, tools and specific args
-- Modify `src/me/main.py` to add custom inputs for your agents and tasks
+After the main workflow is complete, the application will enter an interactive mode. You can ask questions or provide feedback directly to the "Cloud Software and DevOps Architect" to refine the generated application.
 
-## Running the Project
-
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
-
-```bash
-$ crewai run
-```
-
-This command initializes the me Crew, assembling the agents and assigning them tasks as defined in your configuration.
-
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
-
-## Understanding Your Crew
-
-The me Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
-
-## Support
-
-For support, questions, or feedback regarding the Me Crew or crewAI.
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
-
-Let's create wonders together with the power and simplicity of crewAI.
+To exit the interactive mode, type `exit` or `quit`.
