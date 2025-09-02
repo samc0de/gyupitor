@@ -32,7 +32,7 @@ class CacheChangeHandler(FileSystemEventHandler):
     def on_created(self, event):
         if not event.is_directory:
             logger.info(f"Detected new file: {event.src_path}")
-            ingest_new_files()
+            ingest_.bq_cachew_files()
 
 @app.on_event("startup")
 async def startup_event():

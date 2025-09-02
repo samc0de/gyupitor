@@ -15,7 +15,16 @@ RAW_TIMELINES_DIR = f'{CACHE_DIR}/raw_timelines'
 PROCESSED_QUERIES_DIR = f'{CACHE_DIR}/processed_queries'
 PROCESSED_TIMELINES_DIR = f'{CACHE_DIR}/processed_timelines'
 
+
+def ensure_cache_dirs_exist():
+    """Creates the cache directories if they don't already exist."""
+    os.makedirs(RAW_QUERIES_DIR, exist_ok=True)
+    os.makedirs(RAW_TIMELINES_DIR, exist_ok=True)
+    os.makedirs(PROCESSED_QUERIES_DIR, exist_ok=True)
+    os.makedirs(PROCESSED_TIMELINES_DIR, exist_ok=True)
+
 def ingest_new_files():
+    ensure_cache_dirs_exist()
     db: Session = SessionLocal()
     try:
         # Process timelines first to get metadata

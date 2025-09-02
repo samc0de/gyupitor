@@ -6,6 +6,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import warnings
+from crewai import Crew, Task
 
 from datetime import datetime
 
@@ -42,12 +43,17 @@ def run():
         return
 
     print("\n✅ Entering interactive mode. The crew has finished its main tasks.")
-    print("You can now ask questions or provide feedback to the Customer Chatbot.")
+    print("You can now ask questions or provide feedback to the Software Architect.")
     
-    # Get the original chatbot agent from the crew, preserving its memory
-    customer_chatbot = crew.agents[-1] 
-    if "Chatbot" not in customer_chatbot.role:
-        print("Error: Could not find the Customer Chatbot agent. Exiting.")
+    # Find the Software Architect agent to interact with
+    software_architect_agent = None
+    for agent in crew.agents:
+        if agent.role == 'Software Architect':
+            software_architect_agent = agent
+            break
+    
+    if not software_architect_agent:
+        print("Error: Could not find the Software Architect agent. Exiting.")
         return
 
     while True:
@@ -58,23 +64,22 @@ def run():
                 break
 
             # Create a new, single-agent crew for the chat interaction
-            # This re-uses the *exact same agent object*, preserving its memory
             chat_crew = Crew(
-                agents=[customer_chatbot],
+                agents=[software_architect_agent],
                 tasks=[
                     Task(
                         description=f"Address the user's question: '{user_input}'. Use your existing knowledge of the project.",
-                        agent=customer_chatbot,
+                        agent=software_architect_agent,
                         expected_output="A helpful, context-aware response."
                     )
                 ],
                 verbose=False,
-                memory=True # Memory is enabled for the agent within this single-task crew
+                memory=True 
             )
             
             result = chat_crew.kickoff()
             
-            print("\nChatbot:")
+            print("\nSoftware Architect:")
             print(result)
             print("\n-------------------\n")
 
