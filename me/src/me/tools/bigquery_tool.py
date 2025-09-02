@@ -40,6 +40,29 @@ def timeline_to_csv(timeline: list[dict], top_n: int = 5) -> str:
 
     return output.getvalue()
 
+def job_details_to_summary(details: dict) -> dict:
+    """Extract key cost and performance indicators from the verbose job details."""
+    if not details:
+        return {}
+    
+    # Extract cache hit status
+    cache_hit = details.get("jobStatistics", {}).get("query", {}).get("cacheHit", "unknown")
+
+    # Extract billing tier and estimated bytes processed
+    billing_tier = details.get("jobStatistics", {}).get("query", {}).get("billingTier", "unknown")
+    estimated_bytes = details.get("jobStatistics", {}).get("query", {}).get("estimatedBytesProcessed", 0)
+
+    # Simplified statement type
+    statement_type = details.get("jobStatistics", {}).get("query", {}).get("statementType", "unknown")
+
+    return {
+        "cacheHit": cache_hit,
+        "billingTier": billing_tier,
+        "estimatedBytesProcessed": estimated_bytes,
+        "statementType": statement_type
+    }
+
+
 
 class BigQueryTool(BaseTool):
     name: str = "BigQuery Tool"
@@ -90,22 +113,31 @@ class BigQueryTool(BaseTool):
                     timeline_data = processed_row['timeline'] if isinstance(processed_row['timeline'], list) else json.loads(processed_row['timeline'])
                     processed_row['timeline_metrics'] = timeline_to_csv(timeline_data)
                     
-                    timeline_filename = os.path.join(self.raw_timelines_dir, f"{job_id}_timeline.json")
-                    # with open(timeline_filename, 'w') as f:
-                    #     json.dump(timeline_data, f, indent=4)
-                    # processed_row['timeline_details_file'] = timeline_filename
-
                 except (json.JSONDecodeError, IndexError, KeyError, TypeError) as e:
                     print(f"WARNING: Could not process timeline for job {job_id}. Error: {e}")
                     processed_row['timeline_summary'] = {"error": "Could not process timeline data."}
 
                 if 'timeline' in processed_row:
                     del processed_row['timeline']
+
+            # --- Summarize the 'job_details' field ---
+            if 'job_details' in processed_row and processed_row['job_details']:
+                try:
+                    details_data = processed_row['job_details'] if isinstance(processed_row['job_details'], dict) else json.loads(processed_row['job_details'])
+                    processed_row['job_details_summary'] = job_details_to_summary(details_data)
+                except (json.JSONDecodeError, TypeError) as e:
+                    print(f"WARNING: Could not process job_details for job {job_id}. Error: {e}")
+                    processed_row['job_details_summary'] = {"error": "Could not process job_details data."}
+
+                if 'job_details' in processed_row:
+                    del processed_row['job_details']
             
             processed_rows.append(processed_row)
         return processed_rows
 
     def _run(self, query: str) -> str:
+        with open("bq_queries.log", "a") as f:
+            f.write(f"[{datetime.now()}] QUERY:\n{query}\n\n")
         cache_file = self._get_cache_filename(query)
 
         if os.path.exists(cache_file):

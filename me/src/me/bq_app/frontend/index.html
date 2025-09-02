@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery App Frontend</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #1a1a2e; color: #e0e0e0; }
+        .container { max-width: 800px; margin: auto; background-color: #2a2a4a; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); }
+        h1 { color: #8be9fd; }
+        button { background-color: #6272a4; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+        button:hover { background-color: #44475a; }
+        pre { background-color: #282a36; padding: 15px; border-radius: 5px; overflow-x: auto; color: #f8f8f2; }
+        .status { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .status.success { background-color: #4CAF50; color: white; }
+        .status.error { background-color: #f44336; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BigQuery Application Frontend</h1>
+        <p>Interact with the simulated BigQuery API.</p>
+
+        <h2>API Status</h2>
+        <button onclick="checkApiStatus()">Check API Status</button>
+        <pre id="apiStatusResponse"></pre>
+
+        <h2>Query BigQuery MV</h2>
+        <button onclick="sendQuery('fast_query')">Send Fast Query (Simulated Cache Hit)</button>
+        <button onclick="sendQuery('slow_query')">Send Slow Query (Simulated Cache Miss)</button>
+        <button onclick="sendQuery('invalid_query')">Send Invalid Query</button>
+        <pre id="queryResponse"></pre>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

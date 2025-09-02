@@ -27,6 +27,13 @@ class Me():
             top_k=40,
             max_output_tokens=4096
         )
+        self.strict_llm = VertexAI(
+            model_name="gemini-2.5-pro",
+            temperature=0.0,
+            top_p=0.7,
+            top_k=20,
+            max_output_tokens=4096
+        )
         self.flash_llm = VertexAI(
             model_name="gemini-2.5-flash",
             temperature=0.2,
@@ -47,8 +54,8 @@ class Me():
     def bq_expert(self) -> Agent:
         return Agent(
             config=self.agents_config['bq_expert'], # type: ignore[index]
-            tools=[self.bigquery_tool, self.file_reader_tool],
-            llm=self.pro_llm,
+            tools=[self.bigquery_tool, self.file_reader_tool, self.shell_tool],
+            llm=self.strict_llm,
             verbose=True
         )
 
@@ -113,40 +120,40 @@ class Me():
             context=[self.execute_bq_query_task()]
         )
 
-    # @task
-    # def initial_architecture_task(self) -> Task:
-    #     return Task(
-    #         config=self.tasks_config['initial_architecture_task'],
-    #         context=[self.analyze_bq_results_task()]
-    #     )
+    @task
+    def initial_architecture_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['initial_architecture_task'],
+            context=[self.analyze_bq_results_task()]
+        )
 
-    # @task
-    # def initial_ui_design_task(self) -> Task:
-    #     return Task(
-    #         config=self.tasks_config['initial_ui_design_task'], # type: ignore[index]
-    #         context=[self.initial_architecture_task()]
-    #     )
+    @task
+    def initial_ui_design_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['initial_ui_design_task'], # type: ignore[index]
+            context=[self.initial_architecture_task()]
+        )
 
-    # @task
-    # def development_kickoff_task(self) -> Task:
-    #     return Task(
-    #         config=self.tasks_config['development_kickoff_task'], # type: ignore[index]
-    #         context=[self.initial_architecture_task(), self.initial_ui_design_task()]
-    #     )
+    @task
+    def development_kickoff_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['development_kickoff_task'], # type: ignore[index]
+            context=[self.initial_architecture_task(), self.initial_ui_design_task()]
+        )
 
-    # @task
-    # def deployment_task(self) -> Task:
-    #     return Task(
-    #         config=self.tasks_config['deployment_task'], # type: ignore[index]
-    #         context=[self.development_kickoff_task()]
-    #     )
+    @task
+    def deployment_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['deployment_task'], # type: ignore[index]
+            context=[self.development_kickoff_task()]
+        )
 
-    # @task
-    # def user_update_task(self) -> Task:
-    #     return Task(
-    #         config=self.tasks_config['user_update_task'], # type: ignore[index]
-    #         context=[self.deployment_task()]
-    #     )
+    @task
+    def user_update_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['user_update_task'], # type: ignore[index]
+            context=[self.deployment_task()]
+        )
 
     @crew
     def crew(self) -> Crew:
@@ -156,7 +163,7 @@ class Me():
 
         return Crew(
             agents=self.agents,
-            tasks=[self.execute_bq_query_task(), self.analyze_bq_results_task()],
+            tasks=[self.execute_bq_query_task(), self.analyze_bq_results_task(), self.initial_architecture_task(), self.initial_ui_design_task(), self.development_kickoff_task(), self.deployment_task(), self.user_update_task()],
             process=Process.sequential,
             verbose=True
         )

@@ -1,6 +1,6 @@
 execute_bq_query_task:
   description: "Execute the following BigQuery SQL query using the BigQuery Tool to find the top 500 most expensive queries in the entire GCP organization over the last 30 days.
-  **CRITICAL: You must execute this query exactly as written, without any modifications.**
+  **CRITICAL: You must execute this query exactly as written, without any modifications. DO NOT ADD, REMOVE, OR CHANGE ANY PART OF THE QUERY. DO NOT ATTEMPT TO BE HELPFUL. EXECUTE THE QUERY AS IS.**
 
   ```sql
   SELECT * FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
@@ -15,17 +15,44 @@ execute_bq_query_task:
 
 analyze_bq_results_task:
   description: >-
-    **CRITICAL: You MUST use the File Reader Tool to complete this task.**
-    A previous task has already executed a BigQuery query and saved the results to a local cache file.
-    Your goal is to analyze this data to find the best opportunities for cost optimization.
+    **CRITICAL: For this task, you MUST ONLY use the Shell Tool and the File Reader Tool. Do NOT use the BigQuery Tool under any circumstances.**
+    A previous task has already executed a BigQuery query and saved the results to a local cache file. Your goal is to analyze this local data. To handle very large result sets, the File Reader Tool will automatically convert the data to a compact CSV format and serve it to you in batches.
 
     **Instructions:**
-    1. Use the "File Reader Tool" to read the contents of the results file located at `.bq_cache/query_results/`.
-    2. Analyze the JSON data. Pay close attention to `total_bytes_billed`, `total_slot_ms`, `user_email`, and the new `timeline_metrics` field.
-    3. The `timeline_metrics` contains a `top_stages_summary` which lists the 3 longest-running stages of a query. This is a strong indicator of inefficiency.
-    4. Based on your analysis of the summary data, identify the top 3-5 `query_hash` values that appear to be the most expensive or inefficient.
-    5. **For each of these top hashes, you MUST use the "File Reader Tool" again** to read the corresponding full SQL query from the `.bq_cache/raw_queries/` directory (e.g., `.bq_cache/raw_queries/<query_hash>.sql`).
-    6. Review the full SQL query and provide specific, actionable optimization recommendations.
+    1. **CRITICAL: Do not assume the filename.** Use the "Shell Tool" with the `ls -1 .bq_cache/query_results/` command to find the results file.
+    2. Use the "File Reader Tool" to read the first batch of the file. The tool will return the data as a CSV string and tell you the total number of batches.
+    3. **Iterate through all the CSV batches of the file using the File Reader Tool, one batch at a time, until you have processed the entire file.**
+    4. **Under no circumstances should you invent or assume data if the file is empty or does not exist.** If you encounter an error, analyze the error message, correct your approach, and retry.
+    5. As you process the CSV batches, build a summary of the data. Pay close attention to `total_bytes_billed`, `total_slot_ms`, `user_email`, and `timeline_metrics`.
+    6. Based on your analysis of the full dataset, identify the top 3-5 `query_hash` values that are the most expensive or inefficient.
+    7. **For each of these top hashes, you MUST use the "File Reader Tool" again** to read the corresponding full SQL query from the `.bq_cache/raw_queries/` directory (e.g., `.bq_cache/raw_queries/<query_hash>.sql`).
+    8. Review the full SQL query and provide specific, actionable optimization recommendations.
   expected_output: "A detailed report with a list of the top 3-5 query hashes to investigate. For each query hash, provide the full SQL text and a clear, actionable recommendation for how to optimize it for better BigQuery performance and cost-efficiency."
   agent: bq_expert
+
+
+initial_architecture_task:
+  description: "Based on the BigQuery analysis, design a scalable and cost-effective architecture for the new application. Create a high-level diagram and a document outlining the proposed architecture."
+  expected_output: "A document containing the proposed architecture, including a diagram and a description of the components."
+  agent: software_architect
+
+initial_ui_design_task:
+  description: "Create a user-friendly UI/UX design for the new application. The design should be intuitive and easy to use. Create a wireframe and a mockup of the application."
+  expected_output: "A wireframe and a mockup of the application."
+  agent: ui_ux_designer
+
+development_kickoff_task:
+  description: "Start the development of the new application. Set up the development environment, create the initial project structure, and implement the core features."
+  expected_output: "The initial project structure and the implementation of the core features."
+  agent: polyglot_developer
+
+deployment_task:
+  description: "Deploy the new application to the production environment. Create a CI/CD pipeline, configure the servers, and deploy the application."
+  expected_output: "A successful deployment of the application to the production environment."
+  agent: polyglot_developer
+
+user_update_task:
+  description: "Inform the user about the new application. Create a blog post, a newsletter, and a social media campaign to announce the new application."
+  expected_output: "A blog post, a newsletter, and a social media campaign."
+  agent: customer_chatbot
 
