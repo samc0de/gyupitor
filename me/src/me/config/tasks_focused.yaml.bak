@@ -1,0 +1,24 @@
+execute_bq_query_task:
+  description: "Execute the following BigQuery SQL query using the BigQuery Tool to find the top 500 most expensive queries in the entire GCP organization over the last 30 days.
+  **CRITICAL: You must execute this query exactly as written, without any modifications.**
+
+  ```sql
+  SELECT * FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
+  WHERE creation_time BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY) AND CURRENT_TIMESTAMP()
+  ORDER BY COALESCE(total_bytes_billed, 0) DESC, total_slot_ms DESC
+  LIMIT 500
+  ```
+
+  The tool will automatically cache the results."
+  expected_output: "A confirmation message stating that the query has been executed and the results are cached. The output should be a simple string, not the data itself."
+  agent: bq_expert
+
+analyze_bq_results_task:
+  description: "Analyze the main BigQuery results file, which is located in `.bq_cache/query_results/`. This file contains pre-processed data where large, repetitive fields have been extracted.
+  - Raw SQL queries have been removed and replaced with a `query_hash`. To view the full SQL query, you must read the file from the `.bq_cache/raw_queries/` directory using the hash as the filename (e.g., `.bq_cache/raw_queries/<query_hash>.sql`).
+  - `timeline` data has been summarized into a `timeline_summary` field showing a stagewise breakdown of performance. The full, raw timeline is in a separate file referenced by `timeline_details_file`.
+  
+  Your task is to analyze this structured data to identify the most common, expensive, and inefficient jobs. Focus on patterns in the `query_hash` and `timeline_summary` fields."
+  expected_output: "A detailed report containing: 1. A summary of findings from the processed data, including identification of frequently recurring queries (by hash). 2. A list of specific optimization recommendations. For each recommendation, reference the specific `query_hash` and explain the proposed improvement. 3. An estimate of potential cost savings."
+  agent: bq_expert
+

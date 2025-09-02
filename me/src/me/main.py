@@ -48,7 +48,7 @@ def run():
     # Find the Software Architect agent to interact with
     software_architect_agent = None
     for agent in crew.agents:
-        if agent.role == 'Software Architect':
+        if agent.role == 'Cloud Software and DevOps Architect':
             software_architect_agent = agent
             break
     
@@ -74,7 +74,8 @@ def run():
                     )
                 ],
                 verbose=False,
-                memory=True 
+                memory=True,
+                llm=me_crew.pro_llm
             )
             
             result = chat_crew.kickoff()
@@ -126,3 +127,5 @@ def test():
 
     except Exception as e:
         raise Exception(f"An error occurred while testing the crew: {e}")
+if __name__ == "__main__":
+    run()

@@ -2,28 +2,19 @@ version: '3.8'
 
 services:
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    build: ./implementation/backend
     ports:
       - "8000:8000"
     volumes:
-      - ../:/app/me
-    restart: always
-    depends_on:
-      - redis
+      - ./implementation/backend:/app
+    container_name: bq-app-backend
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ./implementation
+      dockerfile: frontend.Dockerfile
     ports:
-      - "80:80"
-    volumes:
-      - ./frontend:/usr/share/nginx/html
-    restart: always
-
-  redis:
-    image: "redis:alpine"
-    ports:
-      - "6379:6379"
+      - "8080:80"
+    depends_on:
+      - backend
+    container_name: bq-app-frontend

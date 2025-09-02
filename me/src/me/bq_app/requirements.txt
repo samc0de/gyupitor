@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-sqlalchemy
-watchdog
-Jinja2
-crewai
-python-dotenv
-langchain-google-vertexai
-google-cloud-bigquery

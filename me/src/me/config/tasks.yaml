@@ -1,58 +1,78 @@
-execute_bq_query_task:
-  description: "Execute the following BigQuery SQL query using the BigQuery Tool to find the top 500 most expensive queries in the entire GCP organization over the last 30 days.
-  **CRITICAL: You must execute this query exactly as written, without any modifications. DO NOT ADD, REMOVE, OR CHANGE ANY PART OF THE QUERY. DO NOT ATTEMPT TO BE HELPFUL. EXECUTE THE QUERY AS IS.**
+analyze_and_recommend_task:
+  description: >-
+    **Task: Execute a precise BigQuery analysis and create a structured report in a new job run directory.**
+    Kick off a new job run by creating a unique directory, execute a SPECIFIC BigQuery query, handle errors, and produce a structured report.
+    **CRITICAL: The query MUST be executed EXACTLY as written below, without modification.**
 
-  ```sql
-  SELECT * FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
-  WHERE creation_time BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY) AND CURRENT_TIMESTAMP()
-  ORDER BY COALESCE(total_bytes_billed, 0) DESC, total_slot_ms DESC
-  LIMIT 500
-  ```
-
-  The tool will automatically cache the results."
-  expected_output: "A confirmation message stating that the query has been executed and the results are cached. The output should be a simple string, not the data itself."
+    ```sql
+    SELECT * FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
+    WHERE creation_time BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY) AND CURRENT_TIMESTAMP()
+    ORDER BY COALESCE(total_bytes_billed, 0) DESC, total_slot_ms DESC
+    LIMIT 500
+    ```
+  expected_output: "The file path to the newly created analysis directory (e.g., 'job_runs/20231027_103000/analysis/')."
   agent: bq_expert
 
-analyze_bq_results_task:
+design_full_stack_application_task:
   description: >-
-    **CRITICAL: For this task, you MUST ONLY use the Shell Tool and the File Reader Tool. Do NOT use the BigQuery Tool under any circumstances.**
-    A previous task has already executed a BigQuery query and saved the results to a local cache file. Your goal is to analyze this local data. To handle very large result sets, the File Reader Tool will automatically convert the data to a compact CSV format and serve it to you in batches.
+    **Task: Create a detailed full-stack application design specification.**
+    Translate the expert's report into a complete product design, including frontend, backend, and containerization.
 
     **Instructions:**
-    1. **CRITICAL: Do not assume the filename.** Use the "Shell Tool" with the `ls -1 .bq_cache/query_results/` command to find the results file.
-    2. Use the "File Reader Tool" to read the first batch of the file. The tool will return the data as a CSV string and tell you the total number of batches.
-    3. **Iterate through all the CSV batches of the file using the File Reader Tool, one batch at a time, until you have processed the entire file.**
-    4. **Under no circumstances should you invent or assume data if the file is empty or does not exist.** If you encounter an error, analyze the error message, correct your approach, and retry.
-    5. As you process the CSV batches, build a summary of the data. Pay close attention to `total_bytes_billed`, `total_slot_ms`, `user_email`, and `timeline_metrics`.
-    6. Based on your analysis of the full dataset, identify the top 3-5 `query_hash` values that are the most expensive or inefficient.
-    7. **For each of these top hashes, you MUST use the "File Reader Tool" again** to read the corresponding full SQL query from the `.bq_cache/raw_queries/` directory (e.g., `.bq_cache/raw_queries/<query_hash>.sql`).
-    8. Review the full SQL query and provide specific, actionable optimization recommendations.
-  expected_output: "A detailed report with a list of the top 3-5 query hashes to investigate. For each query hash, provide the full SQL text and a clear, actionable recommendation for how to optimize it for better BigQuery performance and cost-efficiency."
-  agent: bq_expert
-
-
-initial_architecture_task:
-  description: "Based on the BigQuery analysis, design a scalable and cost-effective architecture for the new application. Create a high-level diagram and a document outlining the proposed architecture."
-  expected_output: "A document containing the proposed architecture, including a diagram and a description of the components."
+    1.  **Create Stage Directory:** Create a `design` directory within the current `JOB_RUN` directory.
+    2.  **Read Report:** Read the `recommendations.json` from the `analysis` directory.
+    3.  **Design Backend:** Specify a simple Python FastAPI backend with a single API endpoint (`/api/recommendations`) that reads the JSON file and serves its content. Explicitly state that NO database is needed.
+    4.  **Design Frontend:** Specify the UI that will fetch data from the backend API and display it.
+    5.  **Design Containerization:** Specify a `docker-compose.yml` file with two services: `backend` and `frontend`. The `frontend` should be a simple nginx server for the static HTML.
+    6.  **Create and Save Spec:** Write all specifications into a `design_spec.md` file in your `design` directory.
+  expected_output: "The file path to the newly created design directory."
   agent: software_architect
 
-initial_ui_design_task:
-  description: "Create a user-friendly UI/UX design for the new application. The design should be intuitive and easy to use. Create a wireframe and a mockup of the application."
-  expected_output: "A wireframe and a mockup of the application."
+implement_backend_task:
+  description: >-
+    **Task: Implement the backend server and its Dockerfile.**
+    Based on the `design_spec.md`, create the FastAPI server.
+
+    **Instructions:**
+    1.  **Create Stage Directory:** Create an `implementation` directory within the current `JOB_RUN` directory.
+    2.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
+    3.  **Write Backend Code:** Create a `main.py` file in the `implementation` directory with the FastAPI application, including the `/api/recommendations` endpoint. The endpoint must read the `recommendations.json` file from the sibling `analysis` directory.
+    4.  **Write Dockerfile:** Create a `backend.Dockerfile` in the `implementation` directory to containerize the FastAPI application.
+  expected_output: "The file path to the `implementation` directory containing the backend code and Dockerfile."
+  agent: polyglot_developer
+
+implement_frontend_task:
+  description: >-
+    **Task: Implement the frontend based on the design specification.**
+    Build the data-driven UI as a single HTML file.
+
+    **Instructions:**
+    1.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
+    2.  **Write Frontend Code:** Create an `index.html` file in the `implementation` directory. This file must use JavaScript to fetch data from the backend's `/api/recommendations` endpoint and dynamically render the UI.
+    3.  **Write Dockerfile:** Create a `frontend.Dockerfile` that uses a simple nginx image to serve the `index.html` file.
+  expected_output: "The file path to the `implementation` directory, now containing the frontend code and Dockerfile."
   agent: ui_ux_designer
 
-development_kickoff_task:
-  description: "Start the development of the new application. Set up the development environment, create the initial project structure, and implement the core features."
-  expected_output: "The initial project structure and the implementation of the core features."
-  agent: polyglot_developer
+containerize_and_run_task:
+  description: >-
+    **Task: Create the Docker Compose file to run the full application.**
+    Assemble the frontend and backend services into a runnable application.
 
-deployment_task:
-  description: "Deploy the new application to the production environment. Create a CI/CD pipeline, configure the servers, and deploy the application."
-  expected_output: "A successful deployment of the application to the production environment."
-  agent: polyglot_developer
+    **Instructions:**
+    1.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
+    2.  **Create Docker Compose File:** Write a `docker-compose.yml` file in the main `JOB_RUN` directory. This file should define the `backend` and `frontend` services, building them from the Dockerfiles in the `implementation` directory and linking them as specified in the design.
+  expected_output: "The final `docker-compose.yml` file content."
+  agent: software_architect
 
-user_update_task:
-  description: "Inform the user about the new application. Create a blog post, a newsletter, and a social media campaign to announce the new application."
-  expected_output: "A blog post, a newsletter, and a social media campaign."
+feedback_and_review_task:
+  description: >-
+    **Task: Review the final application and provide feedback.**
+    As the System AI Monitor, your job is to perform a final review of the entire application.
+
+    **Instructions:**
+    1.  **Create Stage Directory:** Create a `review` directory within the current `JOB_RUN` directory.
+    2.  **Review the System:** Inspect the contents of the `analysis`, `design`, and `implementation` directories.
+    3.  **Provide Feedback:** Write a `review.md` file in your `review` directory. The review should assess the quality, completeness, and adherence to instructions of the generated application and suggest specific areas for improvement.
+  expected_output: "The file path to the newly created `review` directory."
   agent: customer_chatbot
 
