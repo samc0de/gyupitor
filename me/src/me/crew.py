@@ -82,52 +82,61 @@ class Me():
             verbose=True
         )
 
+
     @task
-    def provide_instructions_task(self) -> Task:
+    def create_job_run_directory_task(self) -> Task:
         return Task(
-            config=self.tasks_config['provide_instructions_task'],
-            agent=self.customer_chatbot()
+            config=self.tasks_config['create_job_run_directory_task'],
+            agent=self.bq_expert()
         )
 
     @task
-    def analyze_and_recommend_task(self) -> Task:
+    def execute_bigquery_query_task(self) -> Task:
         return Task(
-            config=self.tasks_config['analyze_and_recommend_task'],
+            config=self.tasks_config['execute_bigquery_query_task'],
             agent=self.bq_expert(),
-            context=[self.provide_instructions_task()]
+            context=[self.create_job_run_directory_task()]
         )
 
     @task
-    def design_full_stack_application_task(self) -> Task:
+    def analyze_and_save_results_task(self) -> Task:
         return Task(
-            config=self.tasks_config['design_full_stack_application_task'],
-            agent=self.software_architect(),
-            context=[self.analyze_and_recommend_task()]
+            config=self.tasks_config['analyze_and_save_results_task'],
+            agent=self.bq_expert(),
+            context=[self.execute_bigquery_query_task()]
         )
 
-    @task
-    def implement_backend_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['implement_backend_task'],
-            agent=self.polyglot_developer(),
-            context=[self.design_full_stack_application_task()]
-        )
+    # @task
+    # def design_full_stack_application_task(self) -> Task:
+    #     return Task(
+    #         config=self.tasks_config['design_full_stack_application_task'],
+    #         agent=self.software_architect(),
+    #         context=[self.analyze_and_recommend_task()]
+    #     )
 
-    @task
-    def implement_frontend_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['implement_frontend_task'],
-            agent=self.ui_ux_designer(),
-            context=[self.design_full_stack_application_task()]
-        )
+    # @task
+    # def implement_backend_task(self) -> Task:
+    #     return Task(
+    #         config=self.tasks_config['implement_backend_task'],
+    #         agent=self.polyglot_developer(),
+    #         context=[self.design_full_stack_application_task()]
+    #     )
 
-    @task
-    def containerize_and_run_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['containerize_and_run_task'],
-            agent=self.software_architect(),
-            context=[self.implement_backend_task(), self.implement_frontend_task()]
-        )
+    # @task
+    # def implement_frontend_task(self) -> Task:
+    #     return Task(
+    #         config=self.tasks_config['implement_frontend_task'],
+    #         agent=self.ui_ux_designer(),
+    #         context=[self.design_full_stack_application_task()]
+    #     )
+
+    # @task
+    # def containerize_and_run_task(self) -> Task:
+    #     return Task(
+    #         config=self.tasks_config['containerize_and_run_task'],
+    #         agent=self.software_architect(),
+    #         context=[self.implement_backend_task(), self.implement_frontend_task()]
+    #     )
 
     # @task
     # def feedback_and_review_task(self) -> Task:

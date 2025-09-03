@@ -1,132 +1,93 @@
-provide_instructions_task:
+create_job_run_directory_task:
   description: >-
-    **Task: Provide Setup and Execution Instructions to the User.**
-    Print a clear, step-by-step guide on how to set up the necessary prerequisites and run the application.
+    **Task: Create a new job run directory.**
+    Kick off a new job run by creating a unique directory. The directory name should be in the format 'job_runs/YYYYMMDD_HHMMSS'.
+  expected_output: "The file path to the newly created job run directory (e.g., 'job_runs/20231027_103000/')."
+  agent: bq_expert
 
-    **Instructions to Print:**
-    ```
-    # CrewAI Full-Stack Application Generator
-
-    This project uses a CrewAI-powered team of agents to automate the design, implementation, and containerization of a full-stack web application based on an initial data analysis report from Google BigQuery.
-
-    ## Prerequisites
-
-    1.  **Python 3.11+**: Ensure you have a modern version of Python installed.
-    2.  **Poetry**: This project uses Poetry for dependency management. If you don't have it, you can install it following the official documentation.
-    3.  **Google Cloud SDK (`gcloud`)**: You must have the `gcloud` CLI installed and authenticated to a Google Cloud project with the BigQuery API enabled.
-        - [Install gcloud](https://cloud.google.com/sdk/docs/install)
-        - Run `gcloud auth application-default login` to authenticate.
-
-    ## Setup Instructions
-
-    1.  **Clone the Repository**:
-        ```bash
-        git clone <repository_url>
-        cd cag/me
-        ```
-
-    2.  **Install Dependencies**:
-        Use Poetry to create a virtual environment and install all required packages.
-        ```bash
-        poetry install
-        ```
-
-    3.  **Activate the Virtual Environment**:
-        All subsequent commands should be run from within the virtual environment.
-        ```bash
-        poetry shell
-        ```
-
-    ## How to Run the Application
-
-    The main entrypoint for the application is `src/me/main.py`. This script will kick off the entire agentic workflow. **Do not use `crewai run`**, as it will not work with this project's custom setup.
-
-    **To run the full process:**
-
-    Execute the `main.py` script from the project root (`cag/me`):
-    ```bash
-    python src/me/main.py
-    ```
-    ```
-  expected_output: "The instructions have been clearly printed to the console for the user."
-  agent: customer_chatbot
-
-
-analyze_and_recommend_task:
+execute_bigquery_query_task:
   description: >-
-    **Task: Execute a precise BigQuery analysis and create a structured report in a new job run directory.**
-    Kick off a new job run by creating a unique directory, execute a SPECIFIC BigQuery query, handle errors, and produce a structured report.
+    **Task: Execute the following query and save the results.**
+    Execute a SPECIFIC BigQuery query, handle errors, and save the results to a file.
     **CRITICAL: The query MUST be executed EXACTLY as written below, without modification.**
 
     ```sql
     SELECT * FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
     WHERE creation_time BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY) AND CURRENT_TIMESTAMP()
     ORDER BY COALESCE(total_bytes_billed, 0) DESC, total_slot_ms DESC
-    LIMIT 500
+    LIMIT 500;
     ```
+  expected_output: "The file path to the newly created file containing the query results."
+  agent: bq_expert
+
+analyze_and_save_results_task:
+  description: >-
+    **Task: Perform BigQuery analysis from cost and performance focus mainly, looking for ALL improvements including query inefficiencies, scrutinise everything, and create a structured report including recommendations, remedies and cost savings focus. Below query gives big results, the bigquery_tool gives batches, write the results for each batch in a new job run directory. Use your expertise to provide as much insights, recommendations and anything you feel important, write every detail in structured files(json, yaml, csv) AND WRITE A document to explain which file contains what data, how the information is contained in that directory.**
+    This is production grade, there are sophisiticated UI infographics to be built on this, structured data is important.
+    ALSO, do not mock any data, do not skip any data, analyse everything. IT IS imperative that you cover all batches fully, write structured o/p for everything, do not add anything unstructured to those files (use yaml if you want to add comments). Only file that can be unstructured is the manifest.
   expected_output: "The file path to the newly created analysis directory (e.g., 'job_runs/20231027_103000/analysis/')."
   agent: bq_expert
 
-design_full_stack_application_task:
-  description: >-
-    **Task: Create a detailed full-stack application design specification.**
-    Translate the expert's report into a complete product design, including frontend, backend, and containerization.
-
-    **Instructions:**
-    1.  **Create Stage Directory:** Create a `design` directory within the current `JOB_RUN` directory.
-    2.  **Read Report:** Read the `recommendations.json` from the `analysis` directory.
-    3.  **Design Backend:** Specify a simple Python FastAPI backend with a single API endpoint (`/api/recommendations`) that reads the JSON file and serves its content. Explicitly state that NO database is needed.
-    4.  **Design Frontend:** Specify the UI that will fetch data from the backend API and display it.
-    5.  **Design Containerization:** Specify a `docker-compose.yml` file with two services: `backend` and `frontend`. The `frontend` should be a simple nginx server for the static HTML.
-    6.  **Create and Save Spec:** Write all specifications into a `design_spec.md` file in your `design` directory.
-  expected_output: "The file path to the newly created design directory."
-  agent: software_architect
-
-implement_backend_task:
-  description: >-
-    **Task: Implement the backend server and its Dockerfile.**
-    Based on the `design_spec.md`, create the FastAPI server.
-
-    **Instructions:**
-    1.  **Create Stage Directory:** Create an `implementation` directory within the current `JOB_RUN` directory.
-    2.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
-    3.  **Write Backend Code:** Create a `main.py` file in the `implementation` directory with the FastAPI application, including the `/api/recommendations` endpoint. The endpoint must read the `recommendations.json` file from the sibling `analysis` directory.
-    4.  **Write Dockerfile:** Create a `backend.Dockerfile` in the `implementation` directory to containerize the FastAPI application.
-  expected_output: "The file path to the `implementation` directory containing the backend code and Dockerfile."
-  agent: polyglot_developer
-
-implement_frontend_task:
-  description: >-
-    **Task: Implement the frontend based on the design specification.**
-    Build the data-driven UI as a single HTML file.
-
-    **Instructions:**
-    1.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
-    2.  **Write Frontend Code:** Create an `index.html` file in the `implementation` directory. This file must use JavaScript to fetch data from the backend's `/api/recommendations` endpoint and dynamically render the UI.
-    3.  **Write Dockerfile:** Create a `frontend.Dockerfile` that uses a simple nginx image to serve the `index.html` file.
-  expected_output: "The file path to the `implementation` directory, now containing the frontend code and Dockerfile."
-  agent: ui_ux_designer
-
-containerize_and_run_task:
-  description: >-
-    **Task: Create the Docker Compose file to run the full application.**
-    Assemble the frontend and backend services into a runnable application.
-
-    **Instructions:**
-    1.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
-    2.  **Create Docker Compose File:** Write a `docker-compose.yml` file in the main `JOB_RUN` directory. This file should define the `backend` and `frontend` services, building them from the Dockerfiles in the `implementation` directory and linking them as specified in the design.
-  expected_output: "The final `docker-compose.yml` file content."
-  agent: software_architect
-
-feedback_and_review_task:
-  description: >-
-    **Task: Review the final application and provide feedback.**
-    As the System AI Monitor, your job is to perform a final review of the entire application.
-
-    **Instructions:**
-    1.  **Create Stage Directory:** Create a `review` directory within the current `JOB_RUN` directory.
-    2.  **Review the System:** Inspect the contents of the `analysis`, `design`, and `implementation` directories.
-    3.  **Provide Feedback:** Write a `review.md` file in your `review` directory. The review should assess the quality, completeness, and adherence to instructions of the generated application and suggest specific areas for improvement.
-  expected_output: "The file path to the newly created `review` directory."
-  agent: customer_chatbot
+    # design_full_stack_application_task:
+    #   description: >-
+    #     **Task: Create a detailed full-stack application design specification.**
+    #     Translate the expert's report into a complete product design, including frontend, backend, and containerization.
+    # 
+    #     **Instructions:**
+    #     1.  **Create Stage Directory:** Create a `design` directory within the current `JOB_RUN` directory.
+    #     2.  **Read Report:** Read the `recommendations.json` from the `analysis` directory.
+    #     3.  **Design Backend:** Specify a simple Python FastAPI backend with a single API endpoint (`/api/recommendations`) that reads the JSON file and serves its content. Explicitly state that NO database is needed.
+    #     4.  **Design Frontend:** Specify the UI that will fetch data from the backend API and display it.
+    #     5.  **Design Containerization:** Specify a `docker-compose.yml` file with two services: `backend` and `frontend`. The `frontend` should be a simple nginx server for the static HTML.
+    #     6.  **Create and Save Spec:** Write all specifications into a `design_spec.md` file in your `design` directory.
+    #   expected_output: "The file path to the newly created design directory."
+    #   agent: software_architect
+    # 
+    # implement_backend_task:
+    #   description: >-
+    #     **Task: Implement the backend server and its Dockerfile.**
+    #     Based on the `design_spec.md`, create the FastAPI server.
+    # 
+    #     **Instructions:**
+    #     1.  **Create Stage Directory:** Create an `implementation` directory within the current `JOB_RUN` directory.
+    #     2.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
+    #     3.  **Write Backend Code:** Create a `main.py` file in the `implementation` directory with the FastAPI application, including the `/api/recommendations` endpoint. The endpoint must read the `recommendations.json` file from the sibling `analysis` directory.
+    #     4.  **Write Dockerfile:** Create a `backend.Dockerfile` in the `implementation` directory to containerize the FastAPI application.
+    #   expected_output: "The file path to the `implementation` directory containing the backend code and Dockerfile."
+    #   agent: polyglot_developer
+    # 
+    # implement_frontend_task:
+    #   description: >-
+    #     **Task: Implement the frontend based on the design specification.**
+    #     Build the data-driven UI as a single HTML file.
+    # 
+    #     **Instructions:**
+    #     1.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
+    #     2.  **Write Frontend Code:** Create an `index.html` file in the `implementation` directory. This file must use JavaScript to fetch data from the backend's `/api/recommendations` endpoint and dynamically render the UI.
+    #     3.  **Write Dockerfile:** Create a `frontend.Dockerfile` that uses a simple nginx image to serve the `index.html` file.
+    #   expected_output: "The file path to the `implementation` directory, now containing the frontend code and Dockerfile."
+    #   agent: ui_ux_designer
+    # 
+    # containerize_and_run_task:
+    #   description: >-
+    #     **Task: Create the Docker Compose file to run the full application.**
+    #     Assemble the frontend and backend services into a runnable application.
+    # 
+    #     **Instructions:**
+    #     1.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
+    #     2.  **Create Docker Compose File:** Write a `docker-compose.yml` file in the main `JOB_RUN` directory. This file should define the `backend` and `frontend` services, building them from the Dockerfiles in the `implementation` directory and linking them as specified in the design.
+    #   expected_output: "The final `docker-compose.yml` file content."
+    #   agent: software_architect
+    # 
+    # feedback_and_review_task:
+    #   description: >-
+    #     **Task: Review the final application and provide feedback.**
+    #     As the System AI Monitor, your job is to perform a final review of the entire application.
+    # 
+    #     **Instructions:**
+    #     1.  **Create Stage Directory:** Create a `review` directory within the current `JOB_RUN` directory.
+    #     2.  **Review the System:** Inspect the contents of the `analysis`, `design`, and `implementation` directories.
+    #     3.  **Provide Feedback:** Write a `review.md` file in your `review` directory. The review should assess the quality, completeness, and adherence to instructions of the generated application and suggest specific areas for improvement.
+    #   expected_output: "The file path to the newly created `review` directory."
+    #   agent: customer_chatbot
 
