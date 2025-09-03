@@ -1,56 +1,3 @@
-provide_instructions_task:
-  description: >-
-    **Task: Provide Setup and Execution Instructions to the User.**
-    Print a clear, step-by-step guide on how to set up the necessary prerequisites and run the application.
-
-    **Instructions to Print:**
-    ```
-    # CrewAI Full-Stack Application Generator
-
-    This project uses a CrewAI-powered team of agents to automate the design, implementation, and containerization of a full-stack web application based on an initial data analysis report from Google BigQuery.
-
-    ## Prerequisites
-
-    1.  **Python 3.10+**: Ensure you have a modern version of Python installed.
-    2.  **Poetry**: This project uses Poetry for dependency management. If you don't have it, you can install it following the official documentation.
-    3.  **Google Cloud SDK (`gcloud`)**: You must have the `gcloud` CLI installed and authenticated to a Google Cloud project with the BigQuery API enabled.
-        - [Install gcloud](https://cloud.google.com/sdk/docs/install)
-        - Run `gcloud auth application-default login` to authenticate.
-
-    ## Setup Instructions
-
-    1.  **Clone the Repository**:
-        ```bash
-        git clone <repository_url>
-        cd cag/me
-        ```
-
-    2.  **Install Dependencies**:
-        Use Poetry to create a virtual environment and install all required packages.
-        ```bash
-        poetry install
-        ```
-
-    3.  **Activate the Virtual Environment**:
-        All subsequent commands should be run from within the virtual environment.
-        ```bash
-        poetry shell
-        ```
-
-    ## How to Run the Application
-
-    The main entrypoint for the application is `src/me/main.py`. This script will kick off the entire 6-step agentic workflow. **Do not use `crewai run`**, as it will not work with this project's custom setup.
-
-    **To run the full process:**
-
-    Execute the `main.py` script from the project root (`cag/me`):
-    ```bash
-    python src/me/main.py
-    ```
-    ```
-  expected_output: "The instructions have been clearly printed to the console for the user."
-  agent: customer_chatbot
-
 analyze_and_recommend_task:
   description: >-
     **Task: Execute a precise BigQuery analysis and create a structured report in a new job run directory.**
@@ -65,7 +12,6 @@ analyze_and_recommend_task:
     ```
   expected_output: "The file path to the newly created analysis directory (e.g., 'job_runs/20231027_103000/analysis/')."
   agent: bq_expert
-
 
 design_full_stack_application_task:
   description: >-
@@ -91,7 +37,7 @@ implement_backend_task:
     1.  **Create Stage Directory:** Create an `implementation` directory within the current `JOB_RUN` directory.
     2.  **Read Spec:** Read the `design_spec.md` from the `design` directory.
     3.  **Write Backend Code:** Create a `main.py` file in the `implementation` directory with the FastAPI application, including the `/api/recommendations` endpoint. The endpoint must read the `recommendations.json` file from the sibling `analysis` directory.
-    4.  **Write Dockerfile:** Create a `backend.Dockerfile` in the `implementation` directory to containerize the FastAPI application. The `CMD` should execute the application as a module to ensure imports work correctly (e.g., `CMD ["python", "-m", "backend.main"]`).
+    4.  **Write Dockerfile:** Create a `backend.Dockerfile` in the `implementation` directory to containerize the FastAPI application.
   expected_output: "The file path to the `implementation` directory containing the backend code and Dockerfile."
   agent: polyglot_developer
 

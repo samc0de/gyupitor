@@ -45,8 +45,17 @@ def run():
     print("\n✅ Entering interactive mode. The crew has finished its main tasks.")
     print("You can now ask questions or provide feedback to the Software Architect.")
     
-    software_architect_agent = me_crew.software_architect_agent
+    # Find the Software Architect agent to interact with
+    software_architect_agent = None
+    for agent in crew.agents:
+        if agent.role == 'Cloud Software and DevOps Architect':
+            software_architect_agent = agent
+            break
     
+    if not software_architect_agent:
+        print("Error: Could not find the Software Architect agent. Exiting.")
+        return
+
     while True:
         try:
             user_input = input("You: ")

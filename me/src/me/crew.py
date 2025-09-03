@@ -22,9 +22,10 @@ class Me():
         self.pro_llm = VertexAI(model_name="gemini-1.5-pro-preview-0409")
         self.strict_llm = VertexAI(model_name="gemini-1.5-pro-preview-0409", temperature=0.0)
         self.flash_llm = VertexAI(model_name="gemini-1.5-flash-preview-0409")
+        # self.agents_config = load_yaml("config/agents.yaml")
         
-        # Expose the software_architect agent for interactive mode
-        self.software_architect_agent = self.software_architect()
+        # # Expose the software_architect agent for interactive mode
+        # self.software_architect_agent = self.software_architect()
 
     @agent
     def bq_expert(self) -> Agent:
@@ -37,12 +38,13 @@ class Me():
 
     @agent
     def software_architect(self) -> Agent:
-        return Agent(
+        self.software_architect_agent = Agent(
             config=self.agents_config['software_architect'],
             tools=[FileWriterTool(), ShellTool(), FileReaderTool()],
             llm=self.pro_llm,
             verbose=True
         )
+        return self.software_architect_agent
 
     @agent
     def ui_ux_designer(self) -> Agent:
@@ -127,13 +129,13 @@ class Me():
             context=[self.implement_backend_task(), self.implement_frontend_task()]
         )
 
-    @task
-    def feedback_and_review_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['feedback_and_review_task'],
-            agent=self.customer_chatbot(),
-            context=[self.containerize_and_run_task()]
-        )
+    # @task
+    # def feedback_and_review_task(self) -> Task:
+    #     return Task(
+    #         config=self.tasks_config['feedback_and_review_task'],
+    #         agent=self.customer_chatbot(),
+    #         context=[self.containerize_and_run_task()]
+    #     )
 
     @crew
     def crew(self) -> Crew:

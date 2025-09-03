@@ -1,0 +1,31 @@
+Current Task: **Task: Review the final application and provide feedback.** As the System AI Monitor, your job is to perform a final review of the entire application.
+**Instructions:** 1.  **Create Stage Directory:** Create a `review` directory within the current `JOB_RUN` directory. 2.  **Review the System:** Inspect the contents of the `analysis`, `design`, and `implementation` directories. 3.  **Provide Feedback:** Write a `review.md` file in your `review` directory. The review should assess the quality, completeness, and adherence to instructions of the generated application and suggest specific areas for improvement.
+
+This is the expected criteria for your final answer: The file path to the newly created `review` directory.
+you MUST return the actual complete content as the final answer, not a summary.
+
+This is the context you're working with:
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    build: ./implementation/backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./implementation/backend:/app
+    container_name: bq-app-backend
+
+  frontend:
+    build:
+      context: ./implementation
+      dockerfile: frontend.Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    container_name: bq-app-frontend
+```
+
+Begin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!

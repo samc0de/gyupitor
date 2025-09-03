@@ -1,0 +1,69 @@
+User Input:
+Current Task: **Task: Provide Setup and Execution Instructions to the User.** Print a clear, step-by-step guide on how to set up the necessary prerequisites and run the application.
+**Instructions to Print:** ``` # CrewAI Full-Stack Application Generator
+This project uses a CrewAI-powered team of agents to automate the design, implementation, and containerization of a full-stack web application based on an initial data analysis report from Google BigQuery.
+## Prerequisites
+1.  **Python 3.10+**: Ensure you have a modern version of Python installed. 2.  **Poetry**: This project uses Poetry for dependency management. If you don't have it, you can install it following the official documentation. 3.  **Google Cloud SDK (`gcloud`)**: You must have the `gcloud` CLI installed and authenticated to a Google Cloud project with the BigQuery API enabled.
+    - [Install gcloud](https://cloud.google.com/sdk/docs/install)
+    - Run `gcloud auth application-default login` to authenticate.
+
+## Setup Instructions
+1.  **Clone the Repository**:
+    ```bash
+    git clone <repository_url>
+    cd cag/me
+    ```
+
+2.  **Install Dependencies**:
+    Use Poetry to create a virtual environment and install all required packages.
+    ```bash
+    poetry install
+    ```
+
+3.  **Activate the Virtual Environment**:
+    All subsequent commands should be run from within the virtual environment.
+    ```bash
+    poetry shell
+    ```
+
+## How to Run the Application
+The main entrypoint for the application is `src/me/main.py`. This script will kick off the entire 6-step agentic workflow. **Do not use `crewai run`**, as it will not work with this project's custom setup.
+**To run the full process:**
+Execute the `main.py` script from the project root (`cag/me`): ```bash python src/me/main.py ``` ```
+
+This is the expected criteria for your final answer: The instructions have been clearly printed to the console for the user.
+you MUST return the actual complete content as the final answer, not a summary.
+
+Begin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!
+
+My Response (Final Answer):
+# CrewAI Full-Stack Application Generator
+This project uses a CrewAI-powered team of agents to automate the design, implementation, and containerization of a full-stack web application based on an initial data analysis report from Google BigQuery.
+## Prerequisites
+1.  **Python 3.10+**: Ensure you have a modern version of Python installed. 2.  **Poetry**: This project uses Poetry for dependency management. If you don't have it, you can install it following the official documentation. 3.  **Google Cloud SDK (`gcloud`)**: You must have the `gcloud` CLI installed and authenticated to a Google Cloud project with the BigQuery API enabled.
+    - [Install gcloud](https://cloud.google.com/sdk/docs/install)
+    - Run `gcloud auth application-default login` to authenticate.
+
+## Setup Instructions
+1.  **Clone the Repository**:
+    ```bash
+    git clone <repository_url>
+    cd cag/me
+    ```
+
+2.  **Install Dependencies**:
+    Use Poetry to create a virtual environment and install all required packages.
+    ```bash
+    poetry install
+    ```
+
+3.  **Activate the Virtual Environment**:
+    All subsequent commands should be run from within the virtual environment.
+    ```bash
+    poetry shell
+    ```
+
+## How to Run the Application
+The main entrypoint for the application is `src/me/main.py`. This script will kick off the entire 6-step agentic workflow. **Do not use `crewai run`**, as it will not work with this project's custom setup.
+**To run the full process:**
+Execute the `main.py` script from the project root (`cag/me`): ```bash python src/me/main.py ```

@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  meilisearch_db:
+    image: getmeili/meilisearch:v1.6
+    ports:
+      - "7700:7700"
+    volumes:
+      - meili_data:/meili_data
+    environment:
+      MEILI_MASTER_KEY: aSuperSecretMasterKey
+      MEILI_HTTP_PAYLOAD_LIMIT: 100mb # Increase payload limit for large data imports
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--timeout=1", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  bq_optimizer_api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      MEILI_HOST: http://meilisearch_db:7700
+      MEILI_MASTER_KEY: aSuperSecretMasterKey
+    depends_on:
+      meilisearch_db:
+        condition: service_healthy
+    volumes:
+      - ./api:/app/backend # Mount for live changes during development
+
+volumes:
+  meili_data:

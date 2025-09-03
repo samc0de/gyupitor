@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "title": "Recommendation A",
+    "description": "This is the first recommendation."
+  },
+  {
+    "id": 2,
+    "title": "Recommendation B",
+    "description": "This is the second recommendation."
+  }
+]
