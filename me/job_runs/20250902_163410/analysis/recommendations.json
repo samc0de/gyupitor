@@ -1,0 +1,57 @@
+{
+  "recommendations": [
+    {
+      "id": "REC-001",
+      "title": "Implement Materialized View for High-Frequency Query",
+      "description": "A query pattern (hash: c9938384c8e150dc52176b5bdae0f81e2d1360f6524b8d8142186eeef8f028bc) is being executed repeatedly, scanning the full `onix-ai:IBX.column_relationships` table in each run. This results in significant, unnecessary cost as the same data is processed multiple times.",
+      "recommendation": "Create a BigQuery Materialized View to store the pre-computed results of this query. Refactor the application logic for users 'raven-gemini@onix-ai.iam.gserviceaccount.com' and 'shubham.gupta@onixnet.com' to query the Materialized View instead of the base table.",
+      "rationale": "The query consistently scans 4.21 TB and is executed with high frequency. A materialized view will serve the results from its pre-computed state, drastically reducing query processing to near-zero and eliminating redundant computation. This is the most effective strategy for optimizing repetitive query workloads.",
+      "financial_impact": "Each query costs approximately $26.31 (4.21 TB * $6.25/TB). The logs show dozens of executions, suggesting daily costs could be in the hundreds or thousands of dollars. Implementing a materialized view is projected to reduce the cost of this workload by over 95%, leading to potential savings of $15,000 - $20,000+ per month.",
+      "affected_resources": {
+        "users": [
+          "raven-gemini@onix-ai.iam.gserviceaccount.com",
+          "shubham.gupta@onixnet.com"
+        ],
+        "tables": [
+          "onix-ai:IBX.column_relationships"
+        ],
+        "query_hash": "c9938384c8e150dc52176b5bdae0f81e2d1360f6524b8d8142186eeef8f028bc"
+      }
+    },
+    {
+      "id": "REC-002",
+      "title": "Partition and Cluster Base Table to Reduce Scans",
+      "description": "The 4.21 TB table `onix-ai:IBX.column_relationships` is not partitioned or clustered. All queries against it, including the high-frequency query identified in REC-001, result in a full table scan, which is highly inefficient and costly.",
+      "recommendation": "Recreate the `onix-ai:IBX.column_relationships` table with partitioning and clustering. Partition the table by a date or timestamp column (e.g., ingestion date). Cluster the table by the columns used in query filters and join conditions. The exact columns require analysis of the full query text.",
+      "rationale": "Partitioning prunes the data scanned to only the relevant partitions, and clustering co-locates related data to minimize scanning within partitions. This is a fundamental BigQuery best practice for large tables. The query plan's `index_usage_mode: UNUSED` and `code: INDEX_CONFIG_NOT_AVAILABLE` message confirms no optimization structures are in place.",
+      "financial_impact": "Proper partitioning and clustering can reduce data scanned by 80-99% for filtered queries. This would provide massive cost savings on its own and also significantly improve the performance and reduce the maintenance cost of the Materialized View proposed in REC-001. Estimated savings are $10,000 - $18,000 per month across all queries hitting this table.",
+      "affected_resources": {
+        "users": [
+          "all users of the table"
+        ],
+        "tables": [
+          "onix-ai:IBX.column_relationships"
+        ],
+        "query_hash": "all queries on this table"
+      }
+    },
+    {
+      "id": "REC-003",
+      "title": "Cease Use of Anonymous Destination Tables to Enable Caching",
+      "description": "Queries are writing results to temporary, anonymous tables (e.g., `_0ad4584a37...`, `_6057aa3d...`). This practice prevents BigQuery from using cached results for identical subsequent queries, as the destination table is different for each run.",
+      "recommendation": "If the results are needed, write them to a single, persistent, named table. If the results are for immediate analysis, remove the destination table clause entirely and allow the query to leverage BigQuery's automatic result caching. This recommendation is superseded by REC-001 (Materialized View), which is a more robust and manageable solution, but it highlights a critical anti-pattern that must be addressed.",
+      "rationale": "Leveraging BigQuery's caching mechanism is a free and highly effective cost-saving feature. Bypassing it by writing to anonymous tables negates this benefit and leads to extreme waste.",
+      "financial_impact": "Enabling caching would make repeat queries free after the first execution (within a 24-hour window, provided the base data hasn't changed). The savings are equivalent to the full cost of every repeated query, potentially $20,000+ per month for this workload. Note: This saving overlaps with REC-001.",
+      "affected_resources": {
+        "users": [
+          "raven-gemini@onix-ai.iam.gserviceaccount.com",
+          "shubham.gupta@onixnet.com"
+        ],
+        "tables": [
+          "onix-ai:IBX.column_relationships"
+        ],
+        "query_hash": "c9938384c8e150dc52176b5bdae0f81e2d1360f6524b8d8142186eeef8f028bc"
+      }
+    }
+  ]
+}
