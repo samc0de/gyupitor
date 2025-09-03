@@ -1,0 +1,14 @@
+The user wants me to analyze a BigQuery results file and provide a detailed analysis of the data with a focus on cost and performance. I need to create structured output files with my findings and a manifest file to explain the contents of the generated files.
+
+My plan is as follows:
+1.  Create a directory to store the analysis results: `job_runs/20231027_103000/analysis`.
+2.  Parse the provided BigQuery job data to extract relevant information.
+3.  Identify inefficient queries based on metrics like `total_bytes_billed`, execution time, and frequency of execution.
+4.  Perform a cost analysis for each query.
+5.  Formulate performance recommendations and remedies for the identified inefficient queries.
+6.  Create the following structured output files:
+    *   `inefficient_queries.yaml`: To list the inefficient queries and their execution counts.
+    *   `cost_analysis.csv`: To provide a detailed cost breakdown.
+    *   `recommendations.json`: To offer specific optimization recommendations.
+7.  Create a `manifest.md` file to describe the contents of the generated files.
+8.  Return the path to the analysis directory as the final answer.

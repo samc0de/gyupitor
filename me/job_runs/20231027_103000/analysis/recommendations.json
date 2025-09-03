@@ -1,0 +1,17 @@
+[
+  {
+    "query_hash": "0df70a5ed58208625f0b20ab13e57c208ce416b237b67fbc55b12684af398442",
+    "recommendation": "This query is executed 20 times. Materialize the result of this query into a new table and query the materialized table instead. This will significantly reduce cost and improve performance.",
+    "remedy": "CREATE TABLE my_project.my_dataset.materialized_table AS SELECT ...;"
+  },
+  {
+    "query_hash": "c9938384c8e150dc52176b5bdae0f81e2d1360f6524b8d8142186eeef8f028bc",
+    "recommendation": "The query reads a large number of records (686,100,149). Investigate if the table 'onix-ai:IBX.column_relationships' can be partitioned or clustered to reduce the amount of data scanned.",
+    "remedy": "ALTER TABLE onix-ai:IBX.column_relationships ADD PARTITION BY ...;"
+  },
+  {
+    "query_hash": "8b1ebe34f67bb00f7cfd0c703afa3af5634e32835676657fb14dc6c57806dfba",
+    "recommendation": "The query reads a large number of records (1,708,817,516). Investigate if the table 'onix-ai:Nordstrom.column_relationships' can be partitioned or clustered to reduce the amount of data scanned.",
+    "remedy": "ALTER TABLE onix-ai:Nordstrom.column_relationships ADD PARTITION BY ...;"
+  }
+]

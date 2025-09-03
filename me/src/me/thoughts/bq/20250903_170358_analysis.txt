@@ -1,0 +1,1 @@
+I have analyzed the BigQuery jobs and created a report. The key insights are that a few queries are responsible for most of the cost and that there are clear opportunities for optimization through partitioning, clustering, and query rewriting. The report provides specific, actionable recommendations to address these issues.

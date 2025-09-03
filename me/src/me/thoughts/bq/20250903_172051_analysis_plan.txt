@@ -1,0 +1,21 @@
+Analysis Plan:
+
+1. **Query Inefficiency Analysis**:
+   - Analyze `query_info` and `job_stages` from the collected data.
+   - Look for:
+     - Slot contention (high `wait_ms_avg`).
+     - High cardinality joins (high `records_written`/`records_read` ratio).
+     - Partition skew (`performance_insights` in `query_info`).
+
+2. **Cost Analysis**:
+   - Analyze `total_bytes_billed` and `total_slot_ms`.
+   - Identify most expensive queries and users.
+   - Calculate potential cost savings from optimizations.
+
+3. **Recommendations and Remedies**:
+   - Provide specific recommendations to improve performance and reduce costs.
+
+4. **Structured Report Generation**:
+   - Create a summary report in Markdown (`summary_report.md`).
+   - Create a JSON file for detailed recommendations (`recommendations.json`).
+   - Create a CSV file for cost analysis (`cost_analysis.csv`).
