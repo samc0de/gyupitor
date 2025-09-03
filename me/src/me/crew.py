@@ -19,9 +19,9 @@ class Me():
 
     def __init__(self) -> None:
         # Define LLMs
-        self.pro_llm = VertexAI(model_name="gemini-1.5-pro-preview-0409")
-        self.strict_llm = VertexAI(model_name="gemini-1.5-pro-preview-0409", temperature=0.0)
-        self.flash_llm = VertexAI(model_name="gemini-1.5-flash-preview-0409")
+        self.pro_llm = VertexAI(model_name="gemini-2.5-pro")
+        self.strict_llm = VertexAI(model_name="gemini-2.5-pro", temperature=0.0)
+        self.flash_llm = VertexAI(model_name="gemini-2.5-flash")
         # self.agents_config = load_yaml("config/agents.yaml")
         
         # # Expose the software_architect agent for interactive mode

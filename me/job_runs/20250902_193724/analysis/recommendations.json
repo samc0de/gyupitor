@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    {
+      "id": 1,
+      "service": "Compute Engine",
+      "recommendation": "Consider switching to E2-standard-2 machine types for better cost-efficiency.",
+      "priority": "High"
+    },
+    {
+      "id": 2,
+      "service": "Cloud Storage",
+      "recommendation": "Implement a lifecycle policy to move older objects to Nearline or Coldline storage.",
+      "priority": "Medium"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Recommendations</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cloud Recommendations</h1>
+    <table id="recommendations-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Service</th>
+                <th>Recommendation</th>
+                <th>Priority</th>
+            </tr>
+        </thead>
+        <tbody id="recommendations-table-body">
+            <!-- Data will be inserted here by JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch('/api/recommendations')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('recommendations-table-body');
+                    data.recommendations.forEach(rec => {
+                        let row = tableBody.insertRow();
+                        row.insertCell(0).innerText = rec.id;
+                        row.insertCell(1).innerText = rec.service;
+                        row.insertCell(2).innerText = rec.recommendation;
+                        row.insertCell(3).innerText = rec.priority;
+                    });
+                })
+                .catch(error => console.error('Error fetching recommendations:', error));
+        });
+    </script>
+</body>
+</html>

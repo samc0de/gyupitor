@@ -6,15 +6,13 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./implementation/backend:/app
-    container_name: bq-app-backend
+      - ./implementation/backend/recommendations.json:/app/recommendations.json
 
   frontend:
     build:
       context: ./implementation
       dockerfile: frontend.Dockerfile
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - backend
-    container_name: bq-app-frontend

@@ -1,0 +1,10 @@
+[
+    {
+        "id": 1,
+        "recommendation": "Switch to a more cost-effective machine type for your BigQuery jobs."
+    },
+    {
+        "id": 2,
+        "recommendation": "Enable query caching to reduce costs for repeated queries."
+    }
+]
