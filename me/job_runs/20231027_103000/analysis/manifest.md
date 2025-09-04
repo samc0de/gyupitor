@@ -1,11 +1,17 @@
-# BigQuery Job Analysis
+# BigQuery Cost Optimization Analysis Report
 
-This directory contains the analysis of BigQuery jobs, with a focus on cost and performance optimization.
+This directory contains the output of the FinOps cost optimization analysis for BigQuery jobs.
 
-## Files
+## File Descriptions:
 
-*   `inefficient_queries.yaml`: A list of inefficient queries identified from the BigQuery job logs. Each entry includes the query hash and the number of times the query was executed.
+- **`recommendations.json`**: 
+  - **Format**: JSON
+  - **Content**: A list of detailed, actionable recommendations to reduce BigQuery costs. Each recommendation includes a priority, a description of the problem, a proposed solution, and an estimated financial impact.
 
-*   `cost_analysis.csv`: A CSV file containing a cost analysis of the BigQuery jobs. It includes the project ID, job ID, user email, total bytes billed, and the estimated cost in USD.
+- **`cost_analysis.csv`**: 
+  - **Format**: CSV
+  - **Content**: A tabular breakdown of the most expensive queries identified during the analysis. It includes metrics such as `query_hash`, `user_email`, `total_bytes_billed`, `estimated_cost_usd`, and performance indicators like `shuffle_output_bytes_spilled` and `slot_contention_detected`.
 
-*   `recommendations.json`: A JSON file with detailed recommendations for optimizing the inefficient queries. Each recommendation includes the query hash, a description of the issue, and a suggested remedy.
+- **`inefficient_queries.yaml`**: 
+  - **Format**: YAML
+  - **Content**: A human-readable summary of the most inefficient queries. This file groups queries by their normalized hash and provides key metrics, source/destination tables, and a summary of the findings for each problematic query pattern.

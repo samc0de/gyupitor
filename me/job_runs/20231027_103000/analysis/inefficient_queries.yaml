@@ -1,6 +1,34 @@
 - query_hash: 0df70a5ed58208625f0b20ab13e57c208ce416b237b67fbc55b12684af398442
-  count: 20
+  user: vinay.chaudhari@onixnet.com
+  description: Repetitive, high-volume CTAS (CREATE TABLE AS SELECT) job.
+  metrics:
+    total_bytes_billed: 9498080488051 # ~9.5 TB
+    avg_duration_seconds: 4302
+    shuffle_spill_bytes: 2151326091929 # ~2.15 TB
+    slot_contention: true
+  source_tables:
+    - dm-asmt-eagle-processing.bell_canada_impala_eagle_output.trawoutput_org
+  destination_tables:
+    - dm-eagle-bell-canada-hadoop.Impala_Eagle_Output_20250903.trawoutput
+    - dm-eagle-bell-canada-hadoop.Impala_Eagle_Output_20250816.trawoutput
+    - dm-eagle-bell-canada-hadoop.Impala_Eagle_Output_20250814.trawoutput
+  findings: |
+    This is the most critical issue. The query is executed daily, creating a full copy of the source table. This is extremely inefficient.
+    The massive shuffle spill indicates a poorly optimized JOIN or GROUP BY operation, which is the primary driver of cost and slow performance.
+    The use of date-named tables instead of partitioned tables is a major anti-pattern.
 - query_hash: c9938384c8e150dc52176b5bdae0f81e2d1360f6524b8d8142186eeef8f028bc
-  count: 1
-- query_hash: 8b1ebe34f67bb00f7cfd0c703afa3af5634e32835676657fb14dc6c57806dfba
-  count: 1
+  user: shubham.gupta@onixnet.com
+  description: Large SELECT query against a single table.
+  metrics:
+    total_bytes_billed: 4209693925524 # ~4.2 TB
+    avg_duration_seconds: 7
+    shuffle_spill_bytes: 0
+    slot_contention: false
+  source_tables:
+    - onix-ai.IBX.column_relationships
+  destination_tables:
+    - _0ad4584a37f5a46b00bcfe639e027e90a0616a4f.anon2d580ce6c323ee870195e347c4331e33d0268571fa771746c10eb351e3c23554
+  findings: |
+    While the duration is short, the query processes a large amount of data (4.2 TB). 
+    The 'index_usage_mode' is 'UNUSED', with a reason of 'INDEX_CONFIG_NOT_AVAILABLE'. 
+    This suggests that the query could potentially benefit from BigQuery search indexes if the query patterns are selective.

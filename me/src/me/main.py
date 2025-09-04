@@ -23,6 +23,16 @@ def run():
     """
     Run the crew's main tasks once, then enter an interactive mode for feedback.
     """
+    # --- Create unique directory and inject into inputs ---
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    job_run_dir = f"job_runs/{timestamp}"
+    os.makedirs(job_run_dir, exist_ok=True)
+    inputs = {
+        'job_run_dir': job_run_dir,
+        'basename': os.path.basename(job_run_dir)
+    }
+    # ---
+
     me_crew = Me()
     crew = me_crew.crew()
 
@@ -30,7 +40,7 @@ def run():
     try:
         # Run the main sequence of tasks.
         # This is a long-running process. If it hangs, the script will not proceed.
-        main_result = crew.kickoff()
+        main_result = crew.kickoff(inputs=inputs)
 
         print("\n✅ Main crew execution finished successfully.")
         print("---------------------------------")

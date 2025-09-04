@@ -8,7 +8,7 @@ from crewai.tools import BaseTool
 from google.cloud import bigquery
 
 
-def timeline_to_csv(timeline: list[dict], top_n: int = 5) -> str:
+def timeline_to_csv(timeline: list[dict], top_n: int = 3) -> str:
     """Convert BigQuery job timeline JSON to a compact CSV for cost optimization."""
 
     # Pick only cost-impacting fields
@@ -141,9 +141,8 @@ class BigQueryTool(BaseTool):
         cache_file = self._get_cache_filename(query)
 
         if os.path.exists(cache_file):
-            print(f"INFO: Returning pre-processed, file-cached BQ results from {cache_file}.")
-            with open(cache_file, 'r') as f:
-                return f"Successfully retrieved cached results from {cache_file}. The BQ expert should now analyze this file. Other agents should wait for the BQ expert's analysis."
+            print(f"INFO: Returning cached BQ results from {cache_file}.")
+            return f"Successfully retrieved cached results. The data is at {cache_file}. Use the PromptDataBatcherTool to split it into batches."
 
         try:
             print("INFO: Executing new BigQuery query...")
@@ -152,16 +151,16 @@ class BigQueryTool(BaseTool):
             results = query_job.result()
             rows = [dict(row) for row in results]
             
-            print(f"INFO: Pre-processing {len(rows)} rows to handle large and repeated fields.")
+            print(f"INFO: Pre-processing {len(rows)} rows.")
             processed_rows = self._preprocess_results(rows)
             
             final_output = json.dumps(processed_rows, indent=4, default=str)
 
-            print(f"INFO: Caching processed results to {cache_file}.")
+            print(f"INFO: Caching {len(rows)} processed rows to {cache_file}.")
             with open(cache_file, 'w') as f:
                 f.write(final_output)
             
-            return f"Successfully executed query and cached processed results to {cache_file}. The BQ expert should now analyze this file. Other agents should wait for the BQ expert's analysis."
+            return f"Successfully executed query and cached {len(rows)} results to {cache_file}. Use the PromptDataBatcherTool to split it into batches."
         except Exception as e:
             print(f"FATAL: Error executing BigQuery query: {e}")
             raise

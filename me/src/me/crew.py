@@ -1,14 +1,17 @@
+import os
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 from langchain_google_vertexai import VertexAI
+from me.utils.llm_logging_callback import LLMLoggingCallback
 
 # Import Tool Classes directly
 from me.tools.bigquery_tool import BigQueryTool
 from me.tools.file_reader_tool import FileReaderTool
 from me.tools.file_writer_tool import FileWriterTool
 from me.tools.shell_tool import ShellTool
+from me.tools.data_aggregation_tool import DataAggregationTool
 
 @CrewBase
 class Me():
@@ -18,10 +21,15 @@ class Me():
     tasks: List[Task]
 
     def __init__(self) -> None:
-        # Define LLMs
-        self.pro_llm = VertexAI(model_name="gemini-2.5-pro")
-        self.strict_llm = VertexAI(model_name="gemini-2.5-pro", temperature=0.0)
-        self.flash_llm = VertexAI(model_name="gemini-2.5-flash")
+        # Create a logger instance
+        # Define the absolute path for the log directory
+        log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'llm_prompts'))
+        self.logger = LLMLoggingCallback(log_dir=log_dir)
+        
+        # Define LLMs with the logger callback
+        self.pro_llm = VertexAI(model_name="gemini-2.5-pro", callbacks=[self.logger])
+        self.strict_llm = VertexAI(model_name="gemini-2.5-pro", temperature=0.0, callbacks=[self.logger])
+        self.flash_llm = VertexAI(model_name="gemini-2.5-flash", callbacks=[self.logger])
         # self.agents_config = load_yaml("config/agents.yaml")
         
         # # Expose the software_architect agent for interactive mode
@@ -31,8 +39,17 @@ class Me():
     def bq_expert(self) -> Agent:
         return Agent(
             config=self.agents_config['bq_expert'],
-            tools=[BigQueryTool(), FileReaderTool(), ShellTool(), FileWriterTool()],
+            tools=[BigQueryTool(), FileReaderTool(), ShellTool(), FileWriterTool(), DataAggregationTool()],
             llm=self.strict_llm,
+            verbose=True
+        )
+
+    @agent
+    def bq_expert_flash(self) -> Agent:
+        return Agent(
+            config=self.agents_config['bq_expert'],
+            tools=[BigQueryTool(), FileReaderTool(), ShellTool(), FileWriterTool(), DataAggregationTool()],
+            llm=self.flash_llm,
             verbose=True
         )
 
@@ -83,19 +100,13 @@ class Me():
         )
 
 
-    @task
-    def create_job_run_directory_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['create_job_run_directory_task'],
-            agent=self.bq_expert()
-        )
+
 
     @task
     def execute_bigquery_query_task(self) -> Task:
         return Task(
             config=self.tasks_config['execute_bigquery_query_task'],
-            agent=self.bq_expert(),
-            context=[self.create_job_run_directory_task()]
+            agent=self.bq_expert_flash()
         )
 
     @task
@@ -104,6 +115,24 @@ class Me():
             config=self.tasks_config['analyze_and_save_results_task'],
             agent=self.bq_expert(),
             context=[self.execute_bigquery_query_task()]
+        )
+
+
+    @task
+    def extract_queries_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['extract_queries_task'],
+            agent=self.bq_expert_flash(),
+            context=[self.execute_bigquery_query_task()]
+        )
+
+
+    @task
+    def analyze_queries_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['analyze_queries_task'],
+            agent=self.bq_expert(),
+            context=[self.extract_queries_task(), self.analyze_and_save_results_task()]
         )
 
     # @task
