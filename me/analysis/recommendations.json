@@ -1,0 +1,6 @@
+[
+  {
+    "recommendation": "The query with hash 'a445d47065961d5635ed1982b68832a26c4596b7ce678a164929497d02804b40' is executed frequently without leveraging the cache. This results in repeated, unnecessary slot consumption and increased costs. A materialized view should be created to pre-compute the results of this query, which will significantly reduce the cost and execution time of subsequent queries.",
+    "remediation_action": "CREATE MATERIALIZED VIEW onix-ai.IBX.mv_column_relationships AS SELECT * FROM onix-ai.IBX.column_relationships;"
+  }
+]

@@ -1,0 +1,72 @@
+[
+{
+  "recommendations": [
+    {
+      "category": "Query Optimization",
+      "description": "High-cost, repetitive queries from user vinay.chaudhari@onixnet.com are causing timeouts and excessive slot usage. These queries need to be rewritten and optimized.",
+      "remediation_action": "1. Rewrite the queries to be more efficient, avoiding full table scans where possible. 2. If the queries are for analytics, consider creating aggregated summary tables. 3. Educate the user on BigQuery best practices.",
+      "affected_jobs": ["bquxjob_5438e80c_1990f14b397", "bquxjob_3a2427db_1990e9527d5", "bquxjob_3f113790_1990e4de9e4"]
+    },
+    {
+      "category": "Query Consolidation",
+      "description": "Multiple users are running identical queries, leading to redundant processing. These should be consolidated into a single, shared resource.",
+      "remediation_action": "Create a parameterized view or a scheduled query for the common query logic (hashes: 580f803365f000adbb92fd574a589fa6832c45b3c53ec00e4550aa85d8dc0b88, 5bf735885be322452bf12ed6db7b53bf29253ac1d23b6f26d66b6bad4617aa22). This will improve performance and leverage caching.",
+      "affected_users": ["vinay.chaudhari@onixnet.com", "arihant.jain@onixnet.com"]
+    },
+    {
+      "category": "Data Storage and Management",
+      "description": "The use of daily-named tables is inefficient. Data should be stored in a partitioned and clustered table to optimize query performance and reduce costs.",
+      "remediation_action": "1. Consolidate the daily tables into a single table partitioned by date. 2. Apply clustering on frequently filtered columns. 3. Backfill historical data into the new partitioned table and decommission the old tables.",
+      "affected_tables": ["dm-eagle-bell-canada-hadoop.Impala_Eagle_Output_20250903.trawoutput", "dm-asmt-eagle-processing.bell_canada_impala_eagle_output.trawoutput_org"]
+    },
+    {
+      "category": "Service Account Governance",
+      "description": "The service account sa-vm-pelican-qa@onx-pelican-qa.iam.gserviceaccount.com is running high-cost queries. These automated processes need to be reviewed for efficiency.",
+      "remediation_action": "1. Analyze the queries run by this service account to identify optimization opportunities. 2. Review the scheduling frequency to ensure it's not running more often than necessary. 3. Implement budget alerts for this service account.",
+      "affected_jobs": ["5269bd8c-7fce-40b3-9885-40c2fce93f9d"]
+    },
+    {
+        "category": "Caching",
+        "description": "None of the analyzed jobs benefited from caching. This indicates a high degree of query variability or a misconfiguration that prevents result reuse.",
+        "remediation_action": "1. Promote the use of materialized views for common, complex queries. 2. Encourage users to run identical queries to benefit from cached results. 3. For queries that are run with slight variations, use query parameters.",
+        "affected_jobs": ["ALL"]
+    },
+    {
+      "category": "Query Optimization",
+      "description": "Inefficient INFORMATION_SCHEMA Query",
+      "explanation": "Queries to INFORMATION_SCHEMA can be slow and expensive, especially when joining multiple views. The LEFT JOIN to COLUMN_FIELD_PATHS is unnecessary as no columns from it are selected.",
+      "modified_query": "SELECT\n  t.table_catalog,\n  t.table_schema,\n  t.table_name,\n  t.column_name,\n  t.ordinal_position,\n  t.is_nullable,\n  t.data_type,\n  t.is_hidden,\n  t.is_system_defined,\n  t.is_partitioning_column,\n  t.clustering_ordinal_position,\n  c.constraint_type\nFROM\n  `onix-ai`.`region-us`.INFORMATION_SCHEMA.COLUMNS AS t\nLEFT JOIN\n  `onix-ai`.`region-us`.INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE AS c\n  ON t.table_catalog = c.table_catalog\n  AND t.table_schema = c.table_schema\n  AND t.table_name = c.table_name\n  AND t.column_name = c.column_name\nWHERE t.table_schema = 'IBX'"
+    },
+    {
+      "category": "Query Optimization",
+      "description": "Inefficient Count Operation",
+      "explanation": "`COUNT(column)` can be less efficient than `COUNT(*)` if the column is nullable, as it has to scan the column for non-null values. For counting all rows, `COUNT(*)` is the standard and most efficient way.",
+      "modified_query": "SELECT COUNT(*) FROM `dm-eagle-bell-canada-hadoop.Impala_Eagle_Output_20250903.trawoutput`"
+    },
+    {
+      "category": "Query Optimization",
+      "description": "Avoid SELECT *",
+      "explanation": "`SELECT *` is an anti-pattern. It retrieves all columns, which increases I/O and can be very expensive, especially with wide tables. You should only select the columns that are actually needed.",
+      "modified_query": "-- Replace * with the actual column names you need\nSELECT your_column1, your_column2 FROM `dm-eagle-bell-canada-hadoop.Impala_Eagle_Output_20250903.trawoutput` LIMIT 1000"
+    },
+    {
+      "category": "Query Optimization",
+      "description": "Inefficient Dynamic SQL with SELECT *",
+      "explanation": "`EXECUTE IMMEDIATE` with `SELECT *` is a double anti-pattern. It prevents query plan caching and retrieves all columns. Avoid `EXECUTE IMMEDIATE` for static queries and specify the required columns instead of using `*`.",
+      "modified_query": "-- Replace * with the actual column names you need\nSELECT your_column1, your_column2 FROM `dm-asmt-eagle-processing.bell_canada_impala_eagle_output.trawoutput_org`"
+    },
+    {
+      "category": "Query Optimization",
+      "description": "Inefficient CTAS with SELECT *",
+      "explanation": "`SELECT *` in a CTAS (Create Table As Select) is inefficient and creates a new table with all columns, which might not be necessary. Specify only the required columns in the `SELECT` statement.",
+      "modified_query": "CREATE OR REPLACE TABLE `dm-eagle-bell-canada-hadoop.Impala_Eagle_Output_20250903.trawoutput`\nAS\nSELECT\n  -- Replace * with the actual column names you need\n  your_column1, \n  your_column2\nFROM `dm-asmt-eagle-processing.bell_canada_impala_eagle_output.trawoutput_org`"
+    },
+    {
+      "category": "Query Optimization",
+      "description": "Inefficient WHERE clause with LIKE and CONTAINS_SUBSTR",
+      "explanation": "The queries use `LIKE` with leading wildcards (`%...`), `CONTAINS_SUBSTR`, and casting columns to `STRING`. These are all highly inefficient and lead to full table scans. Avoid `LIKE` with leading wildcards. If possible, use equality checks or `STARTS_WITH`. Avoid casting columns inside the `WHERE` clause. If the `primary_iccid` is a number, it should be queried as a number. These queries should be consolidated into a single, parameterized query or view.",
+      "modified_query": "-- Example of a more efficient query\nSELECT\n    *\nFROM\n    `dm-eagle-bell-canada-hadoop.Impala_Eagle_Output_20250903.trawoutput`\nWHERE\n    primary_iccid = 893020 -- or STARTS_WITH(CAST(primary_iccid as STRING), '893020') if it's a string search at the beginning"
+    }
+  ]
+}
+]

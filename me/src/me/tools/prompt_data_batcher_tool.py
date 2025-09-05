@@ -1,12 +1,13 @@
 import json
 import os
 from crewai.tools import BaseTool
+from typing import ClassVar
 
 class PromptDataBatcherTool(BaseTool):
     name: str = "Prompt Data Batcher Tool"
     description: str = "Reads a large JSON file and splits it into multiple, smaller batch files based on a token limit."
     
-    TOKEN_LIMIT = 800000  # Set a safe token limit for each batch
+    TOKEN_LIMIT: ClassVar[int] = 800000  # Set a safe token limit for each batch
 
     def _estimate_tokens(self, data: dict) -> int:
         """A simple heuristic to estimate token count."""

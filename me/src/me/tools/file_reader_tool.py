@@ -10,7 +10,10 @@ def json_to_csv(batch: list[dict]) -> str:
     if not batch:
         return ""
     
-    headers = batch[0].keys()
+    all_keys = set()
+    for item in batch:
+        all_keys.update(item.keys())
+    headers = sorted(list(all_keys))
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=headers)
     

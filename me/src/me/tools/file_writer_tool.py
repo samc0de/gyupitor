@@ -2,9 +2,18 @@ import os
 import json
 from crewai.tools import BaseTool
 
+from pydantic import BaseModel, Field
+
+class FileWriterToolSchema(BaseModel):
+    """Input schema for the File Writer Tool."""
+    file_path: str = Field(..., description="The path to the file.")
+    content: str = Field(..., description="The content to write or append.")
+    mode: str = Field(default='w', description="'w' for write (overwrite), 'a' for append. Defaults to 'w'.")
+
 class FileWriterTool(BaseTool):
     name: str = "FileWriterTool"
     description: str = "A tool that can write or append content to a file. Use it to save results, logs, or other text."
+    args_schema: type[BaseModel] = FileWriterToolSchema
 
     def _run(self, file_path: str, content: str, mode: str = 'w') -> str:
         """

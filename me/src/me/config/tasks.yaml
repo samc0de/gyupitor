@@ -19,16 +19,21 @@ analyze_and_save_results_task:
   description: >-
     **Task: Analyze batched BigQuery job data and create a consolidated recommendations report.**
     
-    **CONTEXT:** You will process a batch of BigQuery job data to identify broader, systemic inefficiencies. Instead of analyzing jobs one by one, your goal is to find inter-job patterns and opportunities for optimization *across the entire batch*.
+    **CONTEXT:** You will process a batch of BigQuery job metadata to identify broader, systemic inefficiencies. In addition to finding each and every scope for improvement towards cost savings and performance, find inter-job patterns and opportunities for optimization *across the entire batch*. Consider entire batch at once.
     
     **CRITICAL WORKFLOW:**
     1. **Read a Batch:** Use the FileReaderTool to read a batch of BigQuery job data (e.g., `{basename}-batch-N.json`).
-    2. **Holistic Analysis:** Analyze the **entire batch** of jobs to identify systemic issues. Focus on:
+    2. **Holistic Analysis:** Analyze the **entire batch** of jobs to identify systemic issues(not one by one). Focus on:
         - **Query Similarity:** Identify groups of similar queries that could be consolidated or parameterized.
         - **Scheduling Patterns:** Look for scheduling conflicts or opportunities to stagger jobs to reduce peak slot demand.
         - **Data Access Patterns:** Analyze common data sources or destinations that could benefit from improved storage strategies (e.g., partitioning, clustering).
         - **Cross-Job Dependencies:** Identify implicit dependencies or redundancies between jobs.
     3. **Generate Consolidated Recommendations:** Based on your holistic analysis, generate a set of actionable recommendations. Each recommendation should address a systemic issue and have a clear `remediation_action`.
+    
+    **CRITICAL CONSTRAINTS:**
+    - **NO MOCK DATA:** You MUST NOT invent, create, or use any mock or imaginary data. All recommendations must be based exclusively on the real data provided in the batch files.
+    - **PROCESS ALL RECORDS:** You MUST process all records within a batch. Do not analyze a subset or "top N" of the jobs. Your analysis must be comprehensive.
+
     4. **Save/Append Results:**
         - For the **first batch**, create a new `recommendations.json` file using the FileWriterTool with mode 'w'.
         - For **subsequent batches**, append your new recommendations to the existing file using mode 'a'.

@@ -27,9 +27,9 @@ class Me():
         self.logger = LLMLoggingCallback(log_dir=log_dir)
         
         # Define LLMs with the logger callback
-        self.pro_llm = VertexAI(model_name="gemini-2.5-pro", callbacks=[self.logger])
+        self.pro_llm = VertexAI(model_name="gemini-2.5-pro", temperature=0.2, callbacks=[self.logger])
         self.strict_llm = VertexAI(model_name="gemini-2.5-pro", temperature=0.0, callbacks=[self.logger])
-        self.flash_llm = VertexAI(model_name="gemini-2.5-flash", callbacks=[self.logger])
+        self.flash_llm = VertexAI(model_name="gemini-2.5-flash", temperature=0.2, callbacks=[self.logger])
         # self.agents_config = load_yaml("config/agents.yaml")
         
         # # Expose the software_architect agent for interactive mode
