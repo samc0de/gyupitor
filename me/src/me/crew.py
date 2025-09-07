@@ -22,9 +22,7 @@ class Me():
 
     def __init__(self) -> None:
         # Create a logger instance
-        # Define the absolute path for the log directory
-        log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'llm_prompts'))
-        self.logger = LLMLoggingCallback(log_dir=log_dir)
+        self.logger = LLMLoggingCallback()
         
         # Define LLMs with the logger callback
         self.pro_llm = VertexAI(model_name="gemini-2.5-pro", temperature=0.2, callbacks=[self.logger])

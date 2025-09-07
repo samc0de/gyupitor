@@ -1,4 +1,5 @@
 import json
+import os
 from crewai.tools import BaseTool
 
 class DataAggregationTool(BaseTool):
@@ -12,8 +13,11 @@ class DataAggregationTool(BaseTool):
         Args:
             file_path: The path to the input JSON file from the BigQueryTool.
         """
+        job_run_dir: str = os.getenv('JOB_RUN_DIR', '')
+        full_path = os.path.join(job_run_dir, file_path)
+        
         try:
-            with open(file_path, 'r') as f:
+            with open(full_path, 'r') as f:
                 data = json.load(f)
             
             if not isinstance(data, list):
@@ -51,8 +55,8 @@ class DataAggregationTool(BaseTool):
             return json.dumps(summary, indent=4)
 
         except FileNotFoundError:
-            return json.dumps({"error": f"File not found: {file_path}"})
+            return json.dumps({"error": f"File not found: {full_path}"})
         except json.JSONDecodeError:
-            return json.dumps({"error": f"Could not decode JSON from file: {file_path}"})
+            return json.dumps({"error": f"Could not decode JSON from file: {full_path}"})
         except Exception as e:
             return json.dumps({"error": f"An unexpected error occurred: {str(e)}"})

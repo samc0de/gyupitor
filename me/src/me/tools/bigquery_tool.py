@@ -4,7 +4,9 @@ import csv
 import json
 import hashlib
 from datetime import datetime
+from typing import ClassVar
 from crewai.tools import BaseTool
+from pydantic import model_validator
 from google.cloud import bigquery
 
 
@@ -84,14 +86,19 @@ class BigQueryTool(BaseTool):
     name: str = "BigQuery Tool"
     description: str = "Executes a BigQuery SQL query. Pre-processes results to handle large and repeated fields by deduplicating them and saving the raw data to separate, cross-referenced files."
     
-    # --- New, more organized directory structure ---
-    base_cache_dir: str = ".bq_cache"
-    results_dir: str = os.path.join(base_cache_dir, "query_results")
-    raw_queries_dir: str = os.path.join(base_cache_dir, "raw_queries")
-    raw_timelines_dir: str = os.path.join(base_cache_dir, "raw_timelines")
+    # --- Pydantic Fields ---
+    results_dir: str = "" 
+    raw_queries_dir: str = ""
+    raw_timelines_dir: str = ""
+    base_cache_dir: ClassVar[str] = ".bq_cache"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **data):
+        super().__init__(**data)
+        job_run_dir: str = os.getenv('JOB_RUN_DIR', '')
+        self.results_dir = os.path.join(job_run_dir, "bq_results")
+        self.raw_queries_dir = os.path.join(self.base_cache_dir, "raw_queries")
+        self.raw_timelines_dir = os.path.join(self.base_cache_dir, "raw_timelines")
+        
         os.makedirs(self.results_dir, exist_ok=True)
         os.makedirs(self.raw_queries_dir, exist_ok=True)
         os.makedirs(self.raw_timelines_dir, exist_ok=True)
@@ -108,16 +115,7 @@ class BigQueryTool(BaseTool):
             processed_row = dict(row)
             job_id = processed_row.get('job_id', f"unknown_job_{hashlib.sha256(json.dumps(processed_row, default=str).encode()).hexdigest()}")
 
-            # --- Deduplicate 'query_text' field ---
-            # TODO: Implement a future "Synthesis Agent" that correlates the job performance
-            # analysis with the SQL query structure analysis. This agent will take the outputs
-            # from the job analysis (keyed by q_hash) and the SQL analysis (also keyed by
-            # q_hash) to provide a root cause analysis and a specific, actionable recommendation.
-            # This will allow the LLM to connect performance bottlenecks (e.g., high pending_units)
-            # with SQL anti-patterns (e.g., JOIN on a string column).
-
             if 'query_text' in processed_row and processed_row['query_text']:
-                # Normalize the query by lowercasing and removing all whitespace for a true, semantic hash
                 query_text = processed_row['query_text']
                 normalized_query = "".join(query_text.lower().split())
                 query_hash = hashlib.sha256(normalized_query.encode()).hexdigest()
@@ -126,34 +124,26 @@ class BigQueryTool(BaseTool):
                 if query_hash not in seen_queries:
                     query_filename = os.path.join(self.raw_queries_dir, f"{query_hash}.sql")
                     with open(query_filename, 'w') as f:
-                        f.write(query_text) # Save the original query text for readability
+                        f.write(query_text)
                     seen_queries.add(query_hash)
                 
                 del processed_row['query_text']
 
-            # --- Create a single, aggregated summary from the 'timeline' data ---
             if 'timeline' in processed_row and processed_row['timeline']:
                 try:
-                    # The BQ client library might auto-parse the JSON, so handle both string and list cases
                     timeline_data = processed_row['timeline'] if isinstance(processed_row['timeline'], list) else json.loads(processed_row['timeline'])
                     processed_row['timeline_summary'] = aggregate_timeline_metrics(timeline_data)
-                    
                 except (json.JSONDecodeError, IndexError, KeyError, TypeError) as e:
-                    print(f"WARNING: Could not process timeline for job {job_id}. Error: {e}")
-                    processed_row['timeline_summary'] = {"error": "Could not process timeline data."}
-
+                    processed_row['timeline_summary'] = {"error": f"Could not process timeline: {e}"}
                 if 'timeline' in processed_row:
                     del processed_row['timeline']
 
-            # --- Summarize the 'job_details' field ---
             if 'job_details' in processed_row and processed_row['job_details']:
                 try:
                     details_data = processed_row['job_details'] if isinstance(processed_row['job_details'], dict) else json.loads(processed_row['job_details'])
                     processed_row['job_details_summary'] = job_details_to_summary(details_data)
                 except (json.JSONDecodeError, TypeError) as e:
-                    print(f"WARNING: Could not process job_details for job {job_id}. Error: {e}")
-                    processed_row['job_details_summary'] = {"error": "Could not process job_details data."}
-
+                    processed_row['job_details_summary'] = {"error": f"Could not process job_details: {e}"}
                 if 'job_details' in processed_row:
                     del processed_row['job_details']
             
@@ -163,43 +153,29 @@ class BigQueryTool(BaseTool):
     def _run(self, query: str) -> str:
         cache_file = self._get_cache_filename(query)
 
-        # if os.path.exists(cache_file):
-        #     print(f"INFO: Returning cached BQ results from {cache_file}.")
-        #     with open(cache_file, 'r') as f:
-        #         processed_rows = json.load(f)
-        #     print(f"INFO: Pre-processing {len(processed_rows)} rows from cache.")
-        #     return f"Successfully retrieved cached results. The data is at {cache_file}. Use the PromptDataBatcherTool to split it into batches."
-
+        # Caching is disabled to ensure fresh data on every run.
         try:
-            print("INFO: Executing new BigQuery query...")
-            with open("bq_queries.log", "a") as f:
-                f.write(f"[{datetime.now()}] QUERY:\n{query}\n\n")
             client = bigquery.Client()
             query_job = client.query(query)
             results = query_job.result()
             
-            # --- Robust Data Handling: Write to file, then read back ---
-            raw_results_file = os.path.join(self.results_dir, "raw_q_result.json")
             rows_to_write = [dict(row) for row in results]
+            
+            if not rows_to_write:
+                 return f"Query executed successfully but returned 0 rows. No file was created."
 
-            with open(raw_results_file, 'w') as f:
+            with open(cache_file, 'w') as f:
                 json.dump(rows_to_write, f, default=str)
-            print(f"INFO: Wrote {len(rows_to_write)} raw results to {raw_results_file}.")
 
-            # Now, read the data back from the file to ensure consistency
-            with open(raw_results_file, 'r') as f:
-                rows_to_process = json.load(f)
-
-            print(f"INFO: Pre-processing {len(rows_to_process)} rows.")
-            processed_rows = self._preprocess_results(rows_to_process)
+            processed_rows = self._preprocess_results(rows_to_write)
             
             final_output = json.dumps(processed_rows, indent=4, default=str)
-
-            print(f"INFO: Caching {len(processed_rows)} processed rows to {cache_file}.")
             with open(cache_file, 'w') as f:
                 f.write(final_output)
+
+            job_run_dir = os.getenv('JOB_RUN_DIR', '')
+            relative_path = os.path.relpath(cache_file, start=job_run_dir)
             
-            return f"Successfully executed query and cached {len(processed_rows)} results to {cache_file}. Use the PromptDataBatcherTool to split it into batches."
+            return f"Successfully executed query and saved {len(processed_rows)} processed results to {relative_path}."
         except Exception as e:
-            print(f"FATAL: Error executing BigQuery query: {e}")
-            raise
+            return f"Error executing BigQuery query: {e}"

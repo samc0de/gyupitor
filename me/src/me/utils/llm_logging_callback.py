@@ -6,12 +6,10 @@ from typing import Any, Dict, List
 class LLMLoggingCallback(BaseCallbackHandler):
     """Callback handler for logging LLM prompts."""
 
-    def __init__(self, log_dir: str = None):
+    def __init__(self):
         super().__init__()
-        if log_dir:
-            self.log_dir = log_dir
-        else:
-            self.log_dir = "llm_prompts"
+        job_run_dir: str = os.getenv('JOB_RUN_DIR', 'llm_prompts')
+        self.log_dir = os.path.join(job_run_dir, "llm_prompts")
         os.makedirs(self.log_dir, exist_ok=True)
 
     def on_llm_start(

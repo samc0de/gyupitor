@@ -33,6 +33,7 @@ def run():
     }
     # ---
 
+    os.environ["JOB_RUN_DIR"] = job_run_dir
     me_crew = Me()
     crew = me_crew.crew()
 

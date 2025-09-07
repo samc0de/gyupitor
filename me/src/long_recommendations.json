@@ -1,0 +1,110 @@
+[
+    {
+        "recommendation_id": "REC-20240520-001",
+        "category": "Query Optimization",
+        "severity": "High",
+        "title": "Consolidate Redundant Queries on trawoutput Table",
+        "description": "Multiple identical queries with hash '580f803365f000adbb92fd574a589fa6832c45b3c53ec00e4550aa85d8dc0b88' and '5bf735885be322452bf12ed6db7b53bf29253ac1d23b6f26d66b6bad4617aa22' were executed against the 'dm-eagle-bell-canada-hadoop:Impala_Eagle_Output_20250903.trawoutput' table. This indicates a lack of result caching or reuse. These queries scan a significant amount of data (approx. 9.5 TB per query) but return very small result sets (1 record).",
+        "remediation_action": "Instead of re-running these expensive queries, the results should be saved to a destination table and reused. For queries that need to be run on a schedule, consider using a materialized view to automatically refresh the results.",
+        "affected_jobs": [
+            "bquxjob_5bf5d3e1_199138c7902",
+            "bquxjob_372d7e11_19919cb7ee6",
+            "bquxjob_6997a088_19914f38568",
+            "bquxjob_25e91575_19913fb0173",
+            "bquxjob_3424788_19914109a19"
+        ],
+        "estimated_cost_savings_usd": 250
+    },
+    {
+        "recommendation_id": "REC-20240520-002",
+        "category": "Data Storage Optimization",
+        "severity": "High",
+        "title": "Partition and Cluster Key Tables to Reduce Data Scanned",
+        "description": "The table 'dm-asmt-eagle-processing:bell_canada_impala_eagle_output.trawoutput_org' is 9.5 TB and is frequently scanned in its entirety. The job 'bquxjob_3f113790_1990e4de9e4' which creates 'Impala_Eagle_Output_20250903.trawoutput' from this table, experienced slot contention, indicating performance bottlenecks. The subsequent queries on 'trawoutput' also scan terabytes of data.",
+        "remediation_action": "Partition the 'trawoutput_org' and 'trawoutput' tables by a date/timestamp column if available (e.g., ingestion date). Cluster the tables by columns frequently used in WHERE clauses or JOIN keys. This will significantly reduce the amount of data scanned by queries, leading to lower costs and faster execution times.",
+        "affected_jobs": [
+            "bquxjob_3f113790_1990e4de9e4",
+            "bquxjob_479b3cbc_19915094b24",
+            "bquxjob_8846727_1991389a398",
+            "bquxjob_44f12813_19913934187",
+            "bquxjob_5bf5d3e1_199138c7902",
+            "bquxjob_372d7e11_19919cb7ee6",
+            "bquxjob_6997a088_19914f38568",
+            "bquxjob_25e91575_19913fb0173",
+            "bquxjob_3424788_19914109a19"
+        ],
+        "estimated_cost_savings_usd": 500
+    },
+    {
+        "recommendation_id": "REC-20240520-003",
+        "category": "Performance Tuning",
+        "severity": "Critical",
+        "title": "Investigate and Optimize Timed-Out Scripts",
+        "description": "Two jobs ('bquxjob_3a2427db_1990e9527d5' and 'bquxjob_5438e80c_1990f14b397') failed due to 'Script exceeded timeout limit'. These jobs were processing a massive amount of data (58 TB and 49 TB respectively) and consumed a large number of slot-milliseconds before timing out. This represents pure waste.",
+        "remediation_action": "The user 'vinay.chaudhari@onixnet.com' must review and optimize the underlying scripts. The scripts should be broken down into smaller, more manageable steps. Investigate the logic to identify inefficiencies. If these are complex data processing tasks, consider using a more appropriate tool like Dataproc or Dataflow.",
+        "affected_jobs": [
+            "bquxjob_3a2427db_1990e9527d5",
+            "bquxjob_5438e80c_1990f14b397"
+        ],
+        "estimated_cost_savings_usd": 1000
+    },
+    {
+        "recommendation_id": "REC-20240520-004",
+        "category": "Data Storage Optimization",
+        "severity": "Medium",
+        "title": "Implement Indexing on Frequently Queried Tables",
+        "description": "Multiple queries against 'dm-eagle-bell-canada-hadoop:Impala_Eagle_Output_20250903.trawoutput' and 'onix-ai:Nordstrom.column_relationships' show 'index_usage_mode': 'UNUSED' because no index is configured. These tables are large and frequently accessed, making them good candidates for indexing to improve query performance and reduce slot consumption.",
+        "remediation_action": "Analyze the query patterns for these tables to identify the most frequently filtered columns. Create a BigQuery search index on these columns to speed up point lookups and small range scans. This will reduce the data processed and lower slot usage.",
+        "affected_jobs": [
+            "bquxjob_479b3cbc_19915094b24",
+            "bquxjob_8846727_1991389a398",
+            "bquxjob_44f12813_19913934187",
+            "bquxjob_5bf5d3e1_199138c7902",
+            "bquxjob_372d7e11_19919cb7ee6",
+            "bquxjob_6997a088_19914f38568",
+            "bquxjob_25e91575_19913fb0173",
+            "bquxjob_3424788_19914109a19",
+            "job_i0D32p0bqI6lA3CNVghqmmOGzHtT",
+            "job_qF6KJ9h0055XSTyg2kFQQBeJ7pno"
+        ],
+        "estimated_cost_savings_usd": 150
+    },
+    {
+        "recommendation_id": "REC-20240520-005",
+        "category": "Query Optimization",
+        "severity": "Critical",
+        "title": "Avoid SELECT * on Large, Unpartitioned Tables",
+        "description": "Queries are using `SELECT *` on the 9.5 TB table `Impala_Eagle_Output_20250903.trawoutput`. This is a major cost anti-pattern as it requires a full scan of every column in the table, even if only a few columns are actually needed. Combined with the lack of partitioning and filtering on a non-clustered column (`query_id`), this results in maximum data processing for every query, leading to extremely high costs and slow performance.",
+        "remediation_action": {
+            "explanation": "The `SELECT *` pattern is inefficient and costly. You are forcing BigQuery to read all columns, which maximizes the bytes billed. You should explicitly list only the columns you need. This reduces the amount of data processed, lowers costs, and improves query performance. This should be done in conjunction with partitioning and clustering the table as recommended in REC-20240520-002.",
+            "modified_query": "-- Replace with the actual columns you need\nSELECT\n  col1, col2, col3 -- Specify required columns instead of using *\nFROM\n  `dm-eagle-bell-canada-hadoop.Impala_Eagle_Output_20250903.trawoutput`\nWHERE\n  query_id IN ('0019dd7e-bccf-4f34-8688-72f398eae2e6-0-1753422205') -- This filter will be effective if the table is clustered by query_id"
+        },
+        "affected_jobs": [
+            "bquxjob_372d7e11_19919cb7ee6",
+            "bquxjob_5bf5d3e1_199138c7902",
+            "bquxjob_8846727_1991389a398",
+            "bquxjob_6997a088_19914f38568",
+            "bquxjob_3424788_19914109a19",
+            "bquxjob_25e91575_19913fb0173",
+            "bquxjob_44f12813_19913934187",
+            "bquxjob_479b3cbc_19915094b24"
+        ],
+        "estimated_cost_savings_usd": 400
+    },
+    {
+        "recommendation_id": "REC-20240520-006",
+        "category": "Query Optimization",
+        "severity": "High",
+        "title": "Optimize Filtering on Large `column_relationships` Table",
+        "description": "Queries on the 5.6 TB table `Nordstrom.column_relationships` use multiple computationally expensive `REGEXP_CONTAINS` functions and a large `IN` clause in the `WHERE` statement. This leads to full table scans and high slot consumption.",
+        "remediation_action": {
+            "explanation": "The current query structure is inefficient for a table of this size. The `IN` clause with a long list of literals and multiple `REGEXP_CONTAINS` calls prevent effective optimization. To improve this, first, the table should be partitioned (e.g., by an ingestion date if available) and clustered by `target_database`, `target_schema`, and `target_table`. Second, the large `IN` list should be moved into a temporary table and joined against. This allows the query optimizer to better plan the execution.",
+            "modified_query": "-- Step 1: Create a temporary table for the target tables\nCREATE TEMP TABLE target_tables_to_filter AS (\n  SELECT 'SALES_ANALYTICS.SALES_ANALYTICS.F_PERFORMANCE_HISTORY' as full_table_name UNION ALL\n  SELECT 'SALES_ANALYTICS.SALES_ANALYTICS.D_PERIOD' UNION ALL\n  -- ... add all other table names from the IN clause here ...\n  SELECT 'AMPERWAVE.AMPERWAVE.SUPER_AD_LOGS'\n);\n\n-- Step 2: Rewrite the main query to use a JOIN\nSELECT\n  t1.source_database, t1.source_schema, t1.source_table, t1.source_column, t1.source_table_type, t1.query, t1.source_column_expression,\n  t1.target_database, t1.target_schema, t1.target_table, t1.target_column, t1.target_table_type\nFROM\n  `Nordstrom.column_relationships` AS t1\n-- Join with the temp table instead of using a large IN clause\nJOIN\n  target_tables_to_filter AS t2 ON t1.target_database || '.' || t1.target_schema || '.' || t1.target_table = t2.full_table_name\nWHERE\n  t1.source_column_expression IS NOT NULL\n  AND t1.source_table_type IN ('table', 'view')\n  AND t1.target_table_type IN ('table', 'view')\n  AND NOT (\n    REGEXP_CONTAINS(t1.source_column_expression, r'^\\s*(\\"?[\\w$]+\\"?\\.){0,5}\\"?[\\w$]+\\"?\\s*$')\n    OR REGEXP_CONTAINS(t1.source_column_expression, r'(?i)^cast\\s*\\(.+\\s+as\\s+\\w+\\)\\s*$')\n    OR REGEXP_CONTAINS(t1.source_column_expression, r'(?i)^\\\"?\\w+\\\"_?\\s*::\\s*\\w+\\s*$')\n    OR REGEXP_CONTAINS(t1.source_column_expression, r'(?i)^\\s*(upper|lower|trim|ltrim|rtrim|min|max|substring)\\s*\\(\\s*\\\"?\\w+\\\"_?\\s*\\)\\s*$')\n    OR REGEXP_CONTAINS(t1.source_column_expression, r'^\\s*\\\"?\\w+\\\"_?\\s*[\\+\\-\\\*/]\\s*\\d+\\s*$')\n  );"
+        },
+        "affected_jobs": [
+            "job_i0D32p0bqI6lA3CNVghqmmOGzHtT",
+            "job_qF6KJ9h0055XSTyg2kFQQBeJ7pno"
+        ],
+        "estimated_cost_savings_usd": 300
+    }
+]

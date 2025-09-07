@@ -37,15 +37,18 @@ class FileReaderTool(BaseTool):
 
     def _create_batches(self, file_path: str):
         """Reads a JSON file and splits it into batches of CSV data based on character count."""
-        if file_path in self._file_cache:
+        job_run_dir: str = os.getenv('JOB_RUN_DIR', '')
+        full_path = os.path.join(job_run_dir, file_path)
+
+        if full_path in self._file_cache:
             return
 
         try:
-            with open(file_path, 'r') as f:
+            with open(full_path, 'r') as f:
                 data = json.load(f)
 
             if not isinstance(data, list):
-                self._file_cache[file_path] = [json_to_csv([data])]
+                self._file_cache[full_path] = [json_to_csv([data])]
                 return
 
             batches = []
@@ -66,20 +69,23 @@ class FileReaderTool(BaseTool):
                 final_csv_str = json_to_csv(current_batch)
                 batches.append(final_csv_str)
 
-            self._file_cache[file_path] = batches
+            self._file_cache[full_path] = batches
         except (json.JSONDecodeError, KeyError) as e:
-            self._file_cache[file_path] = [f"Error: Invalid JSON or structure in file {file_path}: {e}"]
+            self._file_cache[full_path] = [f"Error: Invalid JSON or structure in file {full_path}: {e}"]
         except Exception as e:
-            self._file_cache[file_path] = [f"Error reading or processing file {file_path}: {e}"]
+            self._file_cache[full_path] = [f"Error reading or processing file {full_path}: {e}"]
 
     def _run(self, file_path: str, batch_number: int) -> str:
         """
         Reads a specific CSV batch from a file.
         """
-        if file_path not in self._file_cache:
+        job_run_dir: str = os.getenv('JOB_RUN_DIR', '')
+        full_path = os.path.join(job_run_dir, file_path)
+        
+        if full_path not in self._file_cache:
             self._create_batches(file_path)
 
-        batches = self._file_cache.get(file_path, [])
+        batches = self._file_cache.get(full_path, [])
         total_batches = len(batches)
 
         if not batches:

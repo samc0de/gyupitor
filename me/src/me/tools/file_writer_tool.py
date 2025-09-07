@@ -2,7 +2,7 @@ import os
 import json
 from crewai.tools import BaseTool
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 class FileWriterToolSchema(BaseModel):
     """Input schema for the File Writer Tool."""
@@ -18,46 +18,37 @@ class FileWriterTool(BaseTool):
     def _run(self, file_path: str, content: str, mode: str = 'w') -> str:
         """
         Use this tool to write or append content to a file.
-
-        Args:
-            file_path: The path to the file.
-            content: The content to write or append.
-            mode: 'w' for write (overwrite), 'a' for append. Defaults to 'w'.
         """
+        job_run_dir: str = os.getenv('JOB_RUN_DIR', '')
+        full_path = os.path.join(job_run_dir, file_path)
+        
         if mode not in ['w', 'a']:
             return "Error: Invalid mode. Use 'w' for write or 'a' for append."
             
         try:
-            directory = os.path.dirname(file_path)
+            directory = os.path.dirname(full_path)
             if directory:
                 os.makedirs(directory, exist_ok=True)
             
             # --- Modification for Appending JSON Lists ---
-            # If appending, we need to handle JSON list formatting correctly.
-            if mode == 'a' and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-                # 1. Read the existing content
-                with open(file_path, 'r+') as f:
+            if mode == 'a' and os.path.exists(full_path) and os.path.getsize(full_path) > 0:
+                with open(full_path, 'r+') as f:
                     f.seek(0, os.SEEK_END)
                     pos = f.tell()
-                    # Check if the file ends with ']'
                     if pos > 0:
                         f.seek(pos - 1)
                         if f.read(1) == ']':
-                            # Overwrite ']' with a comma
                             f.seek(pos - 1)
                             f.write(',')
-                            # The new content should not start with '['
                             if content.startswith('['):
                                 content = content[1:]
                             f.write(content)
                         else:
-                            # If it's not a valid list, just append
                             f.write(content)
                     else:
                         f.write(content)
             else:
-                # Default behavior for writing a new file or overwriting
-                with open(file_path, 'w') as f:
+                with open(full_path, 'w') as f:
                     f.write(content)
             
             return f"File '{file_path}' has been updated successfully (mode: {mode})."
