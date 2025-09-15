@@ -11,7 +11,9 @@ from me.tools.bigquery_tool import BigQueryTool
 from me.tools.file_reader_tool import FileReaderTool
 from me.tools.file_writer_tool import FileWriterTool
 from me.tools.shell_tool import ShellTool
-from me.tools.data_aggregation_tool import DataAggregationTool
+from me.tools.data_aggregation_tool import UniqueValueExtractorTool
+
+from ipdb import set_trace
 
 @CrewBase
 class Me():
@@ -37,7 +39,7 @@ class Me():
     def bq_expert(self) -> Agent:
         return Agent(
             config=self.agents_config['bq_expert'],
-            tools=[BigQueryTool(), FileReaderTool(), ShellTool(), FileWriterTool(), DataAggregationTool()],
+            tools=[BigQueryTool(), FileReaderTool(), ShellTool(), FileWriterTool(), UniqueValueExtractorTool()],
             llm=self.strict_llm,
             verbose=True
         )
@@ -46,7 +48,7 @@ class Me():
     def bq_expert_flash(self) -> Agent:
         return Agent(
             config=self.agents_config['bq_expert'],
-            tools=[BigQueryTool(), FileReaderTool(), ShellTool(), FileWriterTool(), DataAggregationTool()],
+            tools=[BigQueryTool(), FileReaderTool(), ShellTool(), FileWriterTool(), UniqueValueExtractorTool()],
             llm=self.flash_llm,
             verbose=True
         )
@@ -100,20 +102,20 @@ class Me():
 
 
 
-    @task
-    def execute_bigquery_query_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['execute_bigquery_query_task'],
-            agent=self.bq_expert_flash()
-        )
+    # @task
+    # def execute_bigquery_query_task(self) -> Task:
+    #     return Task(
+    #         config=self.tasks_config['execute_bigquery_query_task'],
+    #         agent=self.bq_expert_flash()
+    #     )
 
-    @task
-    def analyze_and_save_results_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['analyze_and_save_results_task'],
-            agent=self.bq_expert(),
-            context=[self.execute_bigquery_query_task()]
-        )
+    # @task
+    # def analyze_and_save_results_task(self) -> Task:
+    #     return Task(
+    #         config=self.tasks_config['analyze_and_save_results_task'],
+    #         agent=self.bq_expert(),
+    #         context=[self.execute_bigquery_query_task()]
+    #     )
 
 
     @task
@@ -121,17 +123,16 @@ class Me():
         return Task(
             config=self.tasks_config['extract_queries_task'],
             agent=self.bq_expert_flash(),
-            context=[self.execute_bigquery_query_task()]
         )
 
 
-    @task
-    def analyze_queries_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['analyze_queries_task'],
-            agent=self.bq_expert(),
-            context=[self.extract_queries_task(), self.analyze_and_save_results_task()]
-        )
+    # @task
+    # def analyze_queries_task(self) -> Task:
+    #     return Task(
+    #         config=self.tasks_config['analyze_queries_task'],
+    #         agent=self.bq_expert(),
+    #         context=[self.extract_queries_task(), self.analyze_and_save_results_task()]
+    #     )
 
     # @task
     # def design_full_stack_application_task(self) -> Task:
@@ -188,6 +189,7 @@ if __name__ == "__main__":
     print("Crew script started...")
     try:
         me_crew = Me()
+        # set_trace()
         result = me_crew.crew().kickoff()
         print("Crew kickoff result:")
         print(result)

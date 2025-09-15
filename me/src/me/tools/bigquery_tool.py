@@ -152,6 +152,7 @@ class BigQueryTool(BaseTool):
 
     def _run(self, query: str) -> str:
         cache_file = self._get_cache_filename(query)
+        raw_results_file = cache_file.replace('.json', '_raw.json')
 
         # Caching is disabled to ensure fresh data on every run.
         try:
@@ -164,7 +165,8 @@ class BigQueryTool(BaseTool):
             if not rows_to_write:
                  return f"Query executed successfully but returned 0 rows. No file was created."
 
-            with open(cache_file, 'w') as f:
+            # Save the raw, unprocessed results
+            with open(raw_results_file, 'w') as f:
                 json.dump(rows_to_write, f, default=str)
 
             processed_rows = self._preprocess_results(rows_to_write)
@@ -175,7 +177,8 @@ class BigQueryTool(BaseTool):
 
             job_run_dir = os.getenv('JOB_RUN_DIR', '')
             relative_path = os.path.relpath(cache_file, start=job_run_dir)
+            raw_relative_path = os.path.relpath(raw_results_file, start=job_run_dir)
             
-            return f"Successfully executed query and saved {len(processed_rows)} processed results to {relative_path}."
+            return f"Successfully executed query. Saved {len(processed_rows)} processed results to {relative_path} and the full, raw results to {raw_relative_path}."
         except Exception as e:
             return f"Error executing BigQuery query: {e}"

@@ -1,81 +1,77 @@
+# execute_bigquery_query_task:
+#   description: >-
+#     **Task: Execute the following query and save the results.**
+#     Execute a SPECIFIC BigQuery query, handle errors, and save the results to a file.
+#     **CRITICAL: The query MUST be executed EXACTLY as written below, without modification.**
+# 
+#     ```sql
+#     SELECT * FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
+#     WHERE creation_time BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY) AND CURRENT_TIMESTAMP()
+#     ORDER BY COALESCE(total_bytes_billed, 0) DESC, total_slot_ms DESC
+#     LIMIT 500;
+#     ```
+#   expected_output: "The file path to the newly created file containing the query results."
+#   agent: bq_expert
 
-
-execute_bigquery_query_task:
-  description: >-
-    **Task: Execute the following query and save the results.**
-    Execute a SPECIFIC BigQuery query, handle errors, and save the results to a file.
-    **CRITICAL: The query MUST be executed EXACTLY as written below, without modification.**
-
-    ```sql
-    SELECT * FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
-    WHERE creation_time BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY) AND CURRENT_TIMESTAMP()
-    ORDER BY COALESCE(total_bytes_billed, 0) DESC, total_slot_ms DESC
-    LIMIT 500;
-    ```
-  expected_output: "The file path to the newly created file containing the query results."
-  agent: bq_expert
-
-analyze_and_save_results_task:
-  description: >-
-    **Task: Analyze batched BigQuery job data and create a consolidated recommendations report.**
+# analyze_and_save_results_task:
+#   description: >-
+#     **Task: Analyze batched BigQuery job data and create a consolidated recommendations report.**
     
-    **CONTEXT:** You will process a batch of BigQuery job metadata to identify broader, systemic inefficiencies. In addition to finding each and every scope for improvement towards cost savings and performance, find inter-job patterns and opportunities for optimization *across the entire batch*. Consider entire batch at once.
+#     **CONTEXT:** You will process a batch of BigQuery job metadata to identify broader, systemic inefficiencies. In addition to finding each and every scope for improvement towards cost savings and performance, find inter-job patterns and opportunities for optimization *across the entire batch*. Consider entire batch at once.
     
-    **CRITICAL WORKFLOW:**
-    1. **Read a Batch:** Use the FileReaderTool to read a batch of BigQuery job data (e.g., `{basename}-batch-N.json`).
-    2. **Holistic Analysis:** Analyze the **entire batch** of jobs to identify systemic issues(not one by one). Focus on:
-        - **Query Similarity:** Identify groups of similar queries that could be consolidated or parameterized.
-        - **Scheduling Patterns:** Look for scheduling conflicts or opportunities to stagger jobs to reduce peak slot demand.
-        - **Data Access Patterns:** Analyze common data sources or destinations that could benefit from improved storage strategies (e.g., partitioning, clustering).
-        - **Cross-Job Dependencies:** Identify implicit dependencies or redundancies between jobs.
-    3. **Generate Consolidated Recommendations:** Based on your holistic analysis, generate a set of actionable recommendations. Each recommendation should address a systemic issue and have a clear `remediation_action`.
+#     **CRITICAL WORKFLOW:**
+#     1. **Read a Batch:** Use the FileReaderTool to read a batch of BigQuery job data (e.g., `{basename}-batch-N.json`).
+#     2. **Holistic Analysis:** Analyze the **entire batch** of jobs to identify systemic issues(not one by one). Identify all systemic inefficiencies across the batch of jobs.
+#           Do not limit yourself to query similarity, scheduling, data access, or Cross-Job dependencies —
+#           these are examples, but also consider any other relevant aspects (e.g., cost patterns, slot usage, user behavior, schema design).
+#     3. **Generate Consolidated Recommendations:** Based on your holistic analysis, generate a set of actionable recommendations. Each recommendation should address a systemic issue and have a clear `remediation_action`.
     
-    **CRITICAL CONSTRAINTS:**
-    - **NO MOCK DATA:** You MUST NOT invent, create, or use any mock or imaginary data. All recommendations must be based exclusively on the real data provided in the batch files.
-    - **PROCESS ALL RECORDS:** You MUST process all records within a batch. Do not analyze a subset or "top N" of the jobs. Your analysis must be comprehensive.
+#     **CRITICAL CONSTRAINTS:**
+#     - **NO MOCK DATA:** You MUST NOT invent, create, or use any mock or imaginary data. All recommendations must be based exclusively on the real data provided in the batch files.
+#     - **PROCESS ALL RECORDS:** You MUST process all records within a batch. Do not analyze a subset or "top N" of the jobs. Your analysis must be comprehensive. THIS IS VERY VERY IMPORTANT. Do not send top n records, PROCESS ALLLLLL JOBS from the json file.
 
-    4. **Save/Append Results:**
-        - For the **first batch**, create a new `recommendations.json` file using the FileWriterTool with mode 'w'.
-        - For **subsequent batches**, append your new recommendations to the existing file using mode 'a'.
+#     4. **Save/Append Results:**
+#         - For the **first batch**, create a new `recommendations.json` file using the FileWriterTool with mode 'w'.
+#         - For **subsequent batches**, append your new recommendations to the existing file using mode 'a'.
     
-    **FINAL STEP (After all batches are processed):**
-    - Create a `manifest.md` file that explains the contents of the `recommendations.json` file.
-  expected_output: "A single, consolidated recommendations.json file containing the analysis for ALL jobs, along with a manifest.md file."
-  agent: bq_expert
+#     **FINAL STEP (After all batches are processed):**
+#     - Create a `manifest.md` file that explains the contents of the `recommendations.json` file.
+#   expected_output: "A single, consolidated recommendations.json file containing the analysis for ALL jobs, along with a manifest.md file."
+#   agent: bq_expert
 
 
 extract_queries_task:
   description: >-
-    **Task: Call the DataAggregationTool to extract unique queries.**
+    **Task: Use jq to inspect the nested structure of the first record.**
     
     **Instructions:**
-    Your ONLY job is to call the `DataAggregationTool`.
-    - Use the `file_path` provided in your context.
-    - Set the `data_key` parameter to exactly `"query_text"`.
+    Your ONLY job is to call the `ShellTool`.
+    - Execute the following command precisely:
+      `jq '.[0].query_info' /home/sameer.mahabole/work/cag/me/job_runs/20250908_111323/bq_results/dda9d5a64e40d5327f7dc1ca1b46e8642fdd64b038ebb5abac54d6a2c87d0093_raw.json`
     
     Do nothing else.
-  expected_output: 'A JSON object with a single key, "unique_values", containing a list of the unique SQL queries.'
+  expected_output: 'The JSON structure of the `query_info` field from the first record.'
   agent: bq_expert_flash
 
 
 
-analyze_queries_task:
-  description: >-
-    **Task: Perform a deep-dive analysis of BigQuery SQL queries and provide explanations and modified queries.**
+# analyze_queries_task:
+#   description: >-
+#     **Task: Perform a deep-dive analysis of BigQuery SQL queries and provide explanations and modified queries.**
     
-    **CRITICAL CONTEXT:** You are the **second analysis step**, focusing specifically on the SQL queries themselves.
+#     **CRITICAL CONTEXT:** You are the **second analysis step**, focusing specifically on the SQL queries themselves.
     
-    **Execution Steps:**
-    **1. Analyze the SQL Queries:** For each query in the list, analyze it for performance and cost anti-patterns.
-    **2. CRITICAL - Generate Explanations and Modified Queries:** For each query that has an issue, you MUST provide:
-        - An `explanation`: A clear, detailed explanation of the issue.
-        - A `modified_query`: The full, rewritten query that fixes the issue.
-    **3. CRITICAL - Handle Large Query Sets:** If you have many queries, process them in batches. If you encounter a token size error, your immediate action is to divide the current batch of queries in half and re-run the analysis on each smaller batch. Do not stop until all queries are processed.
-    **4. CRITICAL: Read, Append, and Write:** This task enriches an existing report. You MUST first read the `recommendations.json` file from the analysis directory provided in your context. Then, append your new, query-specific recommendations to it. Finally, use the FileWriterTool a SINGLE TIME to write the updated file back to the same path.
+#     **Execution Steps:**
+#     **1. Analyze the SQL Queries:** For each query in the list, analyze it for performance and cost anti-patterns.
+#     **2. CRITICAL - Generate Explanations and Modified Queries:** For each query that has an issue, you MUST provide:
+#         - An `explanation`: A clear, detailed explanation of the issue.
+#         - A `modified_query`: The full, rewritten query that fixes the issue.
+#     **3. CRITICAL - Handle Large Query Sets:** If you have many queries, process them in batches. If you encounter a token size error, your immediate action is to divide the current batch of queries in half and re-run the analysis on each smaller batch. Do not stop until all queries are processed.
+#     **4. CRITICAL: Read, Append, and Write:** This task enriches an existing report. You MUST first read the `recommendations.json` file from the analysis directory provided in your context. Then, append your new, query-specific recommendations to it. Finally, use the FileWriterTool a SINGLE TIME to write the updated file back to the same path.
     
-    The final output of this task MUST be the file path to the updated `recommendations.json` file.
-  expected_output: "The file path to the updated recommendations.json file, now containing detailed query recommendations with explanations and modified queries."
-  agent: bq_expert
+#     The final output of this task MUST be the file path to the updated `recommendations.json` file.
+#   expected_output: "The file path to the updated recommendations.json file, now containing detailed query recommendations with explanations and modified queries."
+#   agent: bq_expert
 
 # --- TEMPLATE FOR FUTURE ANALYSIS TASKS ---
 # analyze_and_remediate_ddl_task:
