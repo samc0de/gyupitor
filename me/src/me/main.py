@@ -12,6 +12,8 @@ from datetime import datetime
 
 from me.crew import Me
 
+from me.utils.data_getter.stat_analysis import BQJobsDataGetter
+from pathlib import Path
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
 # This main file is intended to be a way for you to run your
@@ -31,6 +33,19 @@ def run():
         'job_run_dir': job_run_dir,
         'basename': os.path.basename(job_run_dir)
     }
+    # ---
+
+    # --- Run BQ Data Getter ---
+    print("📊 Kicking off BQ Data Getter to fetch and process job data...")
+    try:
+        output_path = Path(job_run_dir) / 'bq_results'
+        data_getter = BQJobsDataGetter(output_dir=str(output_path))
+        data_getter.run()
+        print("✅ BQ Data Getter finished successfully.")
+    except Exception as e:
+        print(f"\n❌ An error occurred during BQ data gathering: {e}")
+        print("Exiting.")
+        return
     # ---
 
     os.environ["JOB_RUN_DIR"] = job_run_dir
